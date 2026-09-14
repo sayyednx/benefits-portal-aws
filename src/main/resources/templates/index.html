@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>File an Unemployment Claim — Benefits Portal</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header class="site-header">
+    <div class="wrap">
+        <span class="brand">Benefits Portal</span>
+        <nav><a th:href="@{/admin/claims}">Admin</a></nav>
+    </div>
+</header>
+
+<main class="wrap narrow">
+    <h1>File an unemployment claim</h1>
+    <p class="lede">Tell us about your job separation. We'll calculate your weekly benefit amount right away.</p>
+
+    <form th:action="@{/claims}" th:object="${claimRequest}" method="post" class="form">
+
+        <div class="field">
+            <label for="claimantName">Full name</label>
+            <input type="text" id="claimantName" th:field="*{claimantName}">
+            <span class="error" th:if="${#fields.hasErrors('claimantName')}" th:errors="*{claimantName}"></span>
+        </div>
+
+        <div class="field">
+            <label for="claimantEmail">Email</label>
+            <input type="email" id="claimantEmail" th:field="*{claimantEmail}">
+            <span class="error" th:if="${#fields.hasErrors('claimantEmail')}" th:errors="*{claimantEmail}"></span>
+        </div>
+
+        <div class="field">
+            <label for="employerName">Former employer</label>
+            <input type="text" id="employerName" th:field="*{employerName}">
+            <span class="error" th:if="${#fields.hasErrors('employerName')}" th:errors="*{employerName}"></span>
+        </div>
+
+        <div class="field">
+            <label for="lastDayWorked">Last day worked</label>
+            <input type="date" id="lastDayWorked" th:field="*{lastDayWorked}">
+            <span class="error" th:if="${#fields.hasErrors('lastDayWorked')}" th:errors="*{lastDayWorked}"></span>
+        </div>
+
+        <div class="field">
+            <label for="separationReason">Reason you're no longer working</label>
+            <select id="separationReason" th:field="*{separationReason}">
+                <option value="">Select one</option>
+                <option th:each="reason : ${separationReasons}"
+                        th:value="${reason}"
+                        th:text="${reason}"></option>
+            </select>
+            <span class="error" th:if="${#fields.hasErrors('separationReason')}" th:errors="*{separationReason}"></span>
+        </div>
+
+        <div class="field">
+            <label for="averageWeeklyWage">Average weekly wage ($)</label>
+            <input type="number" step="0.01" id="averageWeeklyWage" th:field="*{averageWeeklyWage}">
+            <span class="error" th:if="${#fields.hasErrors('averageWeeklyWage')}" th:errors="*{averageWeeklyWage}"></span>
+        </div>
+
+        <button type="submit" class="btn-primary">Submit claim</button>
+    </form>
+</main>
+</body>
+</html>

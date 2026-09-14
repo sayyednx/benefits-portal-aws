@@ -1,0 +1,30 @@
+# Java / Maven
+target/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iws
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# OS
+.DS_Store
+
+# Env / secrets — never commit real credentials
+.env
+*.env.local
+
+# Terraform
+terraform/.terraform/
+terraform/.terraform.lock.hcl
+terraform/*.tfstate
+terraform/*.tfstate.*
+terraform/*.tfvars
+!terraform/*.tfvars.example
+terraform/crash.log

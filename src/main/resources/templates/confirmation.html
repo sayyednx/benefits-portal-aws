@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Claim Submitted — Benefits Portal</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header class="site-header">
+    <div class="wrap">
+        <span class="brand">Benefits Portal</span>
+        <nav><a th:href="@{/admin/claims}">Admin</a></nav>
+    </div>
+</header>
+
+<main class="wrap narrow">
+    <h1>Claim #<span th:text="${claim.id}"></span> filed</h1>
+
+    <div class="card" th:if="${claim.eligible}">
+        <p class="status-pill status-approved" th:text="'Weekly benefit: $' + ${claim.weeklyBenefitAmount}"></p>
+        <p>Based on what you reported, you're monetarily eligible. Your claim now moves to review — an admin
+            will confirm the details before any payment goes out.</p>
+    </div>
+
+    <div class="card" th:unless="${claim.eligible}">
+        <p class="status-pill status-denied">Not monetarily eligible</p>
+        <p>Based on the separation reason you selected, this claim doesn't qualify for benefits under this
+            program's rules. It's still on file and can be reviewed by an admin.</p>
+    </div>
+
+    <dl class="summary">
+        <dt>Status</dt><dd th:text="${claim.status}"></dd>
+        <dt>Filed</dt><dd th:text="${#temporals.format(claim.filedAt, 'MMM d, yyyy h:mm a')}"></dd>
+        <dt>Employer</dt><dd th:text="${claim.employerName}"></dd>
+    </dl>
+
+    <a th:href="@{/}" class="btn-secondary">File another claim</a>
+</main>
+</body>
+</html>
