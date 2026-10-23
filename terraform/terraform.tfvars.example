@@ -8,4 +8,3 @@ admin_password = "choose-a-different-strong-password"
 # Optional overrides:
 # aws_region       = "us-east-1"
 # instance_type    = "t3.micro"
-# ssh_ingress_cidr = "YOUR_IP/32"

@@ -45,7 +45,7 @@ data "aws_ami" "amazon_linux" {
 
 resource "aws_security_group" "app" {
   name        = "${var.app_name}-app-sg"
-  description = "Allows HTTP to the app and (optionally) SSH for debugging."
+  description = "Allows HTTP to the app only. No SSH port is open."
   vpc_id      = data.aws_vpc.default.id
 
   ingress {
@@ -54,14 +54,6 @@ resource "aws_security_group" "app" {
     to_port     = 8080
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    description = "SSH"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.ssh_ingress_cidr]
   }
 
   egress {
@@ -76,7 +68,7 @@ resource "aws_security_group" "app" {
 
 resource "aws_security_group" "db" {
   name        = "${var.app_name}-db-sg"
-  description = "Allows MySQL only from the app's security group — never exposed publicly."
+  description = "Allows MySQL only from the app security group, never from the internet."
   vpc_id      = data.aws_vpc.default.id
 
   ingress {

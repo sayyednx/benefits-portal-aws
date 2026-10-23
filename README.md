@@ -56,15 +56,18 @@ Requires Docker and Docker Compose.
 ```bash
 git clone https://github.com/sayyednx/benefits-portal-aws.git
 cd benefits-portal-aws
+cp .env.example .env   # then set your own ADMIN_PASSWORD in .env
 docker compose up --build
 ```
 
 Then open:
 
 - `http://localhost:8080/` — file a claim
-- `http://localhost:8080/admin/claims` — admin queue (default login `admin` /
-  `changeme123` — **change this** via the `ADMIN_PASSWORD` env var before you show
-  this to anyone, and definitely before deploying it anywhere public)
+- `http://localhost:8080/admin/claims` — admin queue (log in as `admin` with the
+  password you put in `.env`)
+
+There is no built-in default password: the app refuses to start until
+`ADMIN_PASSWORD` is set.
 
 ## Running the tests
 

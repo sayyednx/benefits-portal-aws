@@ -23,7 +23,7 @@ public class SecurityConfig {
     @Value("${admin.username:admin}")
     private String adminUsername;
 
-    @Value("${admin.password:changeme123}")
+    @Value("${admin.password:}")
     private String adminPassword;
 
     @Bean
@@ -33,6 +33,10 @@ public class SecurityConfig {
 
     @Bean
     public InMemoryUserDetailsManager userDetailsService(PasswordEncoder encoder) {
+        if (adminPassword == null || adminPassword.isBlank()) {
+            throw new IllegalStateException(
+                    "ADMIN_PASSWORD is not set. Set it as an environment variable (or in .env for docker compose) before starting the app.");
+        }
         UserDetails admin = User.withUsername(adminUsername)
                 .password(encoder.encode(adminPassword))
                 .roles("ADMIN")

@@ -30,7 +30,8 @@ services:
       SPRING_DATASOURCE_USERNAME: benefits_app
       SPRING_DATASOURCE_PASSWORD: changeme
       ADMIN_USERNAME: admin
-      ADMIN_PASSWORD: changeme123
+      # Read from .env (copy .env.example). Compose stops with this message if it's missing.
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env (copy .env.example to .env)}
 
 volumes:
   mysql_data:

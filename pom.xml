@@ -46,12 +46,6 @@
             <groupId>org.thymeleaf.extras</groupId>
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
-        <dependency>
-            <!-- Needed for the #temporals expression object used in the admin/confirmation templates -->
-            <groupId>org.thymeleaf.extras</groupId>
-            <artifactId>thymeleaf-extras-java8time</artifactId>
-            <version>3.0.4.RELEASE</version>
-        </dependency>
 
         <dependency>
             <groupId>com.mysql</groupId>

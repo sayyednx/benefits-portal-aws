@@ -50,9 +50,3 @@ variable "app_repo_url" {
   type        = string
   default     = "https://github.com/sayyednx/benefits-portal-aws.git"
 }
-
-variable "ssh_ingress_cidr" {
-  description = "CIDR allowed to SSH into the EC2 instance. Restrict this to your own IP (e.g. 1.2.3.4/32) — 0.0.0.0/0 is only a placeholder."
-  type        = string
-  default     = "0.0.0.0/0"
-}
