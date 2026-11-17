@@ -12,6 +12,7 @@ import com.nabeelsayyed.benefitsportal.support.LoginAs;
 import com.nabeelsayyed.benefitsportal.support.MutableClock;
 import com.nabeelsayyed.benefitsportal.support.TestClockConfig;
 import org.junit.jupiter.api.BeforeEach;
+import com.nabeelsayyed.benefitsportal.support.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -54,8 +55,9 @@ class CertificationServiceTest {
 
     private Claim fileClaim() {
         ClaimRequest request = new ClaimRequest();
-        request.setClaimantName("Jesse Park");
-        request.setClaimantEmail("jesse.park@example.com");
+        String tag = TestData.unique();
+        request.setClaimantName("Jesse Park " + tag);
+        request.setClaimantEmail("jesse.park+" + tag + "@example.com");
         request.setEmployerName("Summit Manufacturing");
         request.setLastDayWorked(LocalDate.of(2026, 2, 27));
         request.setSeparationReason(SeparationReason.LAID_OFF);

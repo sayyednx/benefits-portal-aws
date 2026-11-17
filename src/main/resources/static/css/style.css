@@ -100,3 +100,7 @@ fieldset label { font-weight: normal; }
 .spaced { margin-top: 24px; }
 .narrow-form { max-width: 420px; }
 .doc-list { padding-left: 18px; }
+.status-flag { background: #fbe3c8; color: #8a4b08; }
+.chip-flag { border-color: #e2b47c; }
+.card-flag { border-color: #e2b47c; }
+.flag-list { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 14px; }

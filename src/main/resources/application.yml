@@ -37,6 +37,10 @@ benefits:
   earnings-disregard-rate: ${BENEFITS_EARNINGS_DISREGARD_RATE:0.25}
   waiting-week: ${BENEFITS_WAITING_WEEK:true}
 
+# Automatic fraud checks on new claims (see FraudCheckService).
+fraud:
+  high-wage-threshold: ${FRAUD_HIGH_WAGE_THRESHOLD:4000.00}
+
 # Uploaded documents. "local" keeps files in a folder (for docker compose);
 # "s3" keeps them in an S3 bucket (Terraform sets this on the EC2 instance).
 documents:

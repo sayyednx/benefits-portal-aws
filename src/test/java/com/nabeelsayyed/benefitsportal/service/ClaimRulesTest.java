@@ -10,6 +10,7 @@ import com.nabeelsayyed.benefitsportal.support.LoginAs;
 import com.nabeelsayyed.benefitsportal.support.MutableClock;
 import com.nabeelsayyed.benefitsportal.support.TestClockConfig;
 import org.junit.jupiter.api.BeforeEach;
+import com.nabeelsayyed.benefitsportal.support.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -44,8 +45,9 @@ class ClaimRulesTest {
 
     private Claim file(SeparationReason reason) {
         ClaimRequest request = new ClaimRequest();
-        request.setClaimantName("Morgan Diaz");
-        request.setClaimantEmail("morgan.diaz@example.com");
+        String tag = TestData.unique();
+        request.setClaimantName("Morgan Diaz " + tag);
+        request.setClaimantEmail("morgan.diaz+" + tag + "@example.com");
         request.setEmployerName("Lakeside Hospital");
         request.setLastDayWorked(LocalDate.of(2026, 2, 27));
         request.setSeparationReason(reason);

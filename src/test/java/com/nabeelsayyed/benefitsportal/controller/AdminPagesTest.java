@@ -4,6 +4,7 @@ import com.nabeelsayyed.benefitsportal.dto.ClaimRequest;
 import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
+import com.nabeelsayyed.benefitsportal.support.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -36,8 +37,9 @@ class AdminPagesTest {
 
     private Claim fileClaim() {
         ClaimRequest request = new ClaimRequest();
-        request.setClaimantName("Alex Kim");
-        request.setClaimantEmail("alex.kim@example.com");
+        String tag = TestData.unique();
+        request.setClaimantName("Alex Kim " + tag);
+        request.setClaimantEmail("alex.kim+" + tag + "@example.com");
         request.setEmployerName("Harbor Freight Lines");
         request.setLastDayWorked(LocalDate.now().minusDays(3));
         request.setSeparationReason(SeparationReason.COMPANY_CLOSED);
@@ -100,5 +102,25 @@ class AdminPagesTest {
                         .content("{\"status\":\"APPROVED\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.error").value(containsString("can't be moved")));
+    }
+
+    @Test
+    @WithMockUser(roles = "CASEWORKER")
+    void flaggedClaimsShowInTheQueueAndOnTheClaimPage() throws Exception {
+        ClaimRequest request = new ClaimRequest();
+        request.setClaimantName("Rowan Hale " + TestData.unique());
+        request.setClaimantEmail("rowan+" + TestData.unique() + "@example.com");
+        request.setEmployerName("Apex Consulting");
+        request.setLastDayWorked(LocalDate.now().minusDays(3));
+        request.setSeparationReason(SeparationReason.LAID_OFF);
+        request.setAverageWeeklyWage(new BigDecimal("12000.00"));
+        Claim claim = claimService.fileClaim(request);
+
+        mvc.perform(get("/admin/claims").param("flagged", "true"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString(claim.getClaimantName())));
+        mvc.perform(get("/admin/claims/" + claim.getId()))
+                .andExpect(content().string(containsString("Fraud checks")))
+                .andExpect(content().string(containsString("Clear flag")));
     }
 }

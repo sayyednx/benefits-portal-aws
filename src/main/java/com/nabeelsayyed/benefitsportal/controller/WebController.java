@@ -10,6 +10,7 @@ import com.nabeelsayyed.benefitsportal.service.AuditService;
 import com.nabeelsayyed.benefitsportal.service.CertificationService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import com.nabeelsayyed.benefitsportal.service.DocumentService;
+import com.nabeelsayyed.benefitsportal.service.FraudCheckService;
 import com.nabeelsayyed.benefitsportal.service.StaffService;
 import jakarta.validation.Valid;
 import org.springframework.http.ContentDisposition;
@@ -32,15 +33,17 @@ public class WebController {
     private final CertificationService certificationService;
     private final StaffService staffService;
     private final DocumentService documentService;
+    private final FraudCheckService fraudCheckService;
 
     public WebController(ClaimService claimService, AuditService auditService,
                          CertificationService certificationService, StaffService staffService,
-                         DocumentService documentService) {
+                         DocumentService documentService, FraudCheckService fraudCheckService) {
         this.claimService = claimService;
         this.auditService = auditService;
         this.certificationService = certificationService;
         this.staffService = staffService;
         this.documentService = documentService;
+        this.fraudCheckService = fraudCheckService;
     }
 
     @GetMapping("/")
@@ -71,12 +74,21 @@ public class WebController {
     }
 
     @GetMapping("/admin/claims")
-    public String adminDashboard(@RequestParam(required = false) String status, Model model) {
-        model.addAttribute("claims", status == null || status.isBlank()
+    public String adminDashboard(@RequestParam(required = false) String status,
+                                 @RequestParam(required = false) boolean flagged,
+                                 Model model) {
+        var flaggedIds = fraudCheckService.claimIdsWithOpenFlags();
+        var claims = status == null || status.isBlank()
                 ? claimService.findAll()
-                : claimService.findByStatus(ClaimStatus.valueOf(status)));
+                : claimService.findByStatus(ClaimStatus.valueOf(status));
+        if (flagged) {
+            claims = claims.stream().filter(c -> flaggedIds.contains(c.getId())).toList();
+        }
+        model.addAttribute("claims", claims);
+        model.addAttribute("flaggedIds", flaggedIds);
         model.addAttribute("statuses", ClaimStatus.values());
         model.addAttribute("selectedStatus", status);
+        model.addAttribute("flaggedOnly", flagged);
         return "admin";
     }
 
@@ -91,6 +103,8 @@ public class WebController {
         model.addAttribute("maximumBenefit", certificationService.maximumBenefit(claim));
         model.addAttribute("remainingBalance", certificationService.remainingBalance(claim));
         model.addAttribute("documents", documentService.documentsFor(id));
+        model.addAttribute("flags", fraudCheckService.flagsFor(id));
+        model.addAttribute("hasOpenFlags", fraudCheckService.hasOpenFlags(id));
         return "claim-detail";
     }
 
@@ -106,6 +120,19 @@ public class WebController {
             claimService.decide(id, decision);
             redirect.addFlashAttribute("message", "Claim #" + id + " is now " + status + ".");
         } catch (InvalidClaimActionException | AccessDeniedException ex) {
+            redirect.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/admin/claims/" + id;
+    }
+
+    @PostMapping("/admin/claims/{id}/flags/{flagId}/resolve")
+    public String resolveFlag(@PathVariable Long id, @PathVariable Long flagId,
+                              @RequestParam(required = false) String note,
+                              RedirectAttributes redirect) {
+        try {
+            fraudCheckService.resolve(id, flagId, note);
+            redirect.addFlashAttribute("message", "Flag cleared.");
+        } catch (InvalidClaimActionException ex) {
             redirect.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/admin/claims/" + id;

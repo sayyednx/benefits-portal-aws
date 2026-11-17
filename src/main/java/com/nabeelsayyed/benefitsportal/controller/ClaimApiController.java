@@ -4,6 +4,7 @@ import com.nabeelsayyed.benefitsportal.dto.ClaimDecisionRequest;
 import com.nabeelsayyed.benefitsportal.dto.ClaimRequest;
 import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.model.ClaimDocument;
+import com.nabeelsayyed.benefitsportal.model.ClaimFlag;
 import com.nabeelsayyed.benefitsportal.model.ClaimEvent;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.Payment;
@@ -12,6 +13,7 @@ import com.nabeelsayyed.benefitsportal.service.AuditService;
 import com.nabeelsayyed.benefitsportal.service.CertificationService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import com.nabeelsayyed.benefitsportal.service.DocumentService;
+import com.nabeelsayyed.benefitsportal.service.FraudCheckService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -31,13 +33,16 @@ public class ClaimApiController {
     private final AuditService auditService;
     private final CertificationService certificationService;
     private final DocumentService documentService;
+    private final FraudCheckService fraudCheckService;
 
     public ClaimApiController(ClaimService claimService, AuditService auditService,
-                              CertificationService certificationService, DocumentService documentService) {
+                              CertificationService certificationService, DocumentService documentService,
+                              FraudCheckService fraudCheckService) {
         this.claimService = claimService;
         this.auditService = auditService;
         this.certificationService = certificationService;
         this.documentService = documentService;
+        this.fraudCheckService = fraudCheckService;
     }
 
     @PostMapping
@@ -80,6 +85,12 @@ public class ClaimApiController {
     public List<ClaimDocument> documents(@PathVariable Long id) {
         claimService.findById(id);
         return documentService.documentsFor(id);
+    }
+
+    @GetMapping("/{id}/flags")
+    public List<ClaimFlag> flags(@PathVariable Long id) {
+        claimService.findById(id);
+        return fraudCheckService.flagsFor(id);
     }
 
     @PatchMapping("/{id}/status")

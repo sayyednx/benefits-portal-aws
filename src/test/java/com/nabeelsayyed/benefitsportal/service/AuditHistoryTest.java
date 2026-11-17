@@ -7,6 +7,7 @@ import com.nabeelsayyed.benefitsportal.model.ClaimEvent;
 import com.nabeelsayyed.benefitsportal.model.ClaimEventType;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
+import com.nabeelsayyed.benefitsportal.support.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -31,8 +32,9 @@ class AuditHistoryTest {
 
     private Claim fileClaim() {
         ClaimRequest request = new ClaimRequest();
-        request.setClaimantName("Sam Lee");
-        request.setClaimantEmail("sam.lee@example.com");
+        String tag = TestData.unique();
+        request.setClaimantName("Sam Lee " + tag);
+        request.setClaimantEmail("sam.lee+" + tag + "@example.com");
         request.setEmployerName("Riverside Foods");
         request.setLastDayWorked(LocalDate.now().minusDays(5));
         request.setSeparationReason(SeparationReason.LAID_OFF);

@@ -4,6 +4,7 @@ import com.nabeelsayyed.benefitsportal.dto.ClaimRequest;
 import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
+import com.nabeelsayyed.benefitsportal.support.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,8 +24,9 @@ class ClaimServiceTest {
 
     private ClaimRequest requestWith(SeparationReason reason, String weeklyWage) {
         ClaimRequest request = new ClaimRequest();
-        request.setClaimantName("Jordan Rivera");
-        request.setClaimantEmail("jordan.rivera@example.com");
+        String tag = TestData.unique();
+        request.setClaimantName("Jordan Rivera " + tag);
+        request.setClaimantEmail("jordan.rivera+" + tag + "@example.com");
         request.setEmployerName("Acme Logistics");
         request.setLastDayWorked(LocalDate.now().minusDays(10));
         request.setSeparationReason(reason);

@@ -9,6 +9,7 @@ import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import com.nabeelsayyed.benefitsportal.support.LoginAs;
 import com.nabeelsayyed.benefitsportal.support.MutableClock;
 import com.nabeelsayyed.benefitsportal.support.TestClockConfig;
+import com.nabeelsayyed.benefitsportal.support.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -48,8 +49,9 @@ class CertificationPagesTest {
     private Claim approvedClaim() {
         clock.setTo(LocalDateTime.of(2026, 3, 2, 9, 0));
         ClaimRequest request = new ClaimRequest();
-        request.setClaimantName("Quinn Foster");
-        request.setClaimantEmail("quinn@example.com");
+        String tag = TestData.unique();
+        request.setClaimantName("Quinn Foster " + tag);
+        request.setClaimantEmail("quinn+" + tag + "@example.com");
         request.setEmployerName("Bayview Hotel");
         request.setLastDayWorked(LocalDate.of(2026, 2, 27));
         request.setSeparationReason(SeparationReason.LAID_OFF);

@@ -30,6 +30,7 @@ public class ClaimService {
     private final AuditService auditService;
     private final CurrentActor currentActor;
     private final ConfirmationNumberGenerator confirmationNumbers;
+    private final FraudCheckService fraudCheckService;
     private final Clock clock;
 
     /**
@@ -67,11 +68,12 @@ public class ClaimService {
 
     public ClaimService(ClaimRepository claimRepository, AuditService auditService,
                         CurrentActor currentActor, ConfirmationNumberGenerator confirmationNumbers,
-                        Clock clock) {
+                        FraudCheckService fraudCheckService, Clock clock) {
         this.claimRepository = claimRepository;
         this.auditService = auditService;
         this.currentActor = currentActor;
         this.confirmationNumbers = confirmationNumbers;
+        this.fraudCheckService = fraudCheckService;
         this.clock = clock;
     }
 
@@ -97,6 +99,7 @@ public class ClaimService {
         auditService.record(saved.getId(), ClaimEventType.FILED, null, ClaimStatus.FILED,
                 eligible ? "Weekly benefit calculated: $" + saved.getWeeklyBenefitAmount()
                          : "Not monetarily eligible: " + saved.getSeparationReason());
+        fraudCheckService.check(saved);
         return saved;
     }
 
@@ -172,6 +175,7 @@ public class ClaimService {
      * - only staff can decide, and an appeal can only be decided by a supervisor who is not
      *   the person that denied the claim (a second, independent look is the whole point of
      *   an appeal; this is called "separation of duties");
+     * - a claim with open fraud flags can't be approved until someone clears them;
      * - approving a claim that was found ineligible means the reviewer is overturning that
      *   finding (for example, after an appeal), so the benefit is recalculated.
      */
@@ -197,6 +201,10 @@ public class ClaimService {
         if (!from.staffCanMoveTo().contains(to)) {
             throw new InvalidClaimActionException(
                     "A claim that is " + from + " can't be moved to " + to + ".");
+        }
+        if (to == ClaimStatus.APPROVED && fraudCheckService.hasOpenFlags(id)) {
+            throw new InvalidClaimActionException(
+                    "This claim has open fraud flags. Look into them and clear them before approving.");
         }
         if (to == ClaimStatus.DENIED && (notes == null || notes.isEmpty())) {
             throw new InvalidClaimActionException("Add a note explaining why the claim is denied.");

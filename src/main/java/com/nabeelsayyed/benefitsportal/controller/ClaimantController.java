@@ -83,8 +83,10 @@ public class ClaimantController {
         }
         Claim claim = claimService.findById(claimId);
         model.addAttribute("claim", claim);
-        // The page shows only what happened and when. Staff usernames stay on the staff side.
-        model.addAttribute("history", auditService.historyFor(claimId));
+        // The page shows only what happened and when. Staff usernames and fraud flags stay on the staff side.
+        model.addAttribute("history", auditService.historyFor(claimId).stream()
+                .filter(e -> e.getType().isVisibleToClaimant())
+                .toList());
         model.addAttribute("canAppeal", claimService.canAppeal(claim));
         model.addAttribute("appealDeadline", claimService.appealDeadline(claim));
 

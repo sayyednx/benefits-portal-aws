@@ -31,6 +31,26 @@
     <p class="flash flash-ok" th:if="${message}" th:text="${message}" role="status"></p>
     <p class="flash flash-error" th:if="${error}" th:text="${error}" role="alert"></p>
 
+    <section class="card card-flag" th:unless="${flags.isEmpty()}">
+        <h2>Fraud checks</h2>
+        <p th:if="${hasOpenFlags}"><strong>This claim can't be approved until every flag is cleared.</strong></p>
+        <ul class="flag-list">
+            <li th:each="f : ${flags}">
+                <div><strong th:text="${f.reason.label}"></strong>
+                    <span th:if="${f.open}" class="status-pill status-flag">Open</span>
+                    <span th:unless="${f.open}" class="status-pill status-approved">Cleared</span></div>
+                <div class="muted" th:text="${f.details}"></div>
+                <div th:unless="${f.open}" class="muted"
+                     th:text="'Cleared by ' + ${f.resolvedBy} + ' on ' + ${#temporals.format(f.resolvedAt, 'MMM d, yyyy')} + ': ' + ${f.resolutionNote}"></div>
+                <form th:if="${f.open}" th:action="@{/admin/claims/{id}/flags/{fid}/resolve(id=${claim.id},fid=${f.id})}"
+                      method="post" class="decision-form">
+                    <input type="text" name="note" placeholder="What did you check?" aria-label="Note" class="wide" required>
+                    <button type="submit" class="btn-small">Clear flag</button>
+                </form>
+            </li>
+        </ul>
+    </section>
+
     <section class="card">
         <h2>Documents</h2>
         <p th:if="${documents.isEmpty()}" class="muted">The claimant hasn't uploaded any documents.</p>

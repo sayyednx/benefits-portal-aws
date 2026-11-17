@@ -7,6 +7,7 @@ import com.nabeelsayyed.benefitsportal.model.ClaimDocument;
 import com.nabeelsayyed.benefitsportal.model.ClaimEventType;
 import com.nabeelsayyed.benefitsportal.model.DocumentType;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
+import com.nabeelsayyed.benefitsportal.support.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,8 +39,9 @@ class DocumentServiceTest {
 
     private Claim fileClaim() {
         ClaimRequest request = new ClaimRequest();
-        request.setClaimantName("Robin Ellis");
-        request.setClaimantEmail("robin@example.com");
+        String tag = TestData.unique();
+        request.setClaimantName("Robin Ellis " + tag);
+        request.setClaimantEmail("robin+" + tag + "@example.com");
         request.setEmployerName("Greenway Grocers");
         request.setLastDayWorked(LocalDate.now().minusDays(4));
         request.setSeparationReason(SeparationReason.LAID_OFF);

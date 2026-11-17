@@ -13,7 +13,9 @@
     <h1>Claims queue</h1>
 
     <div class="filter-row">
-        <a th:href="@{/admin/claims}" th:classappend="${selectedStatus == null} ? 'chip-active' : ''" class="chip">All</a>
+        <a th:href="@{/admin/claims}" th:classappend="${selectedStatus == null and !flaggedOnly} ? 'chip-active' : ''" class="chip">All</a>
+        <a th:href="@{/admin/claims(flagged=true)}" th:classappend="${flaggedOnly} ? 'chip-active' : ''" class="chip chip-flag"
+           th:text="'Flagged (' + ${flaggedIds.size()} + ')'"></a>
         <a th:each="s : ${statuses}"
            th:href="@{/admin/claims(status=${s})}"
            th:classappend="${selectedStatus == s.toString()} ? 'chip-active' : ''"
@@ -23,13 +25,14 @@
     <table class="claims-table">
         <thead>
         <tr>
-            <th>ID</th><th>Claimant</th><th>Employer</th><th>Reason</th>
+            <th>ID</th><th>Flag</th><th>Claimant</th><th>Employer</th><th>Reason</th>
             <th>Weekly wage</th><th>Benefit</th><th>Eligible</th><th>Status</th><th>Filed</th><th>Decision</th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="claim : ${claims}">
             <td><a th:href="@{/admin/claims/{id}(id=${claim.id})}" th:text="${claim.id}"></a></td>
+            <td><span th:if="${flaggedIds.contains(claim.id)}" class="status-pill status-flag" title="Open fraud flag">Flagged</span></td>
             <td>
                 <div th:text="${claim.claimantName}"></div>
                 <div class="muted" th:text="${claim.claimantEmail}"></div>
@@ -50,7 +53,7 @@
             </td>
         </tr>
         <tr th:if="${claims.isEmpty()}">
-            <td colspan="10" class="muted">No claims match this filter.</td>
+            <td colspan="11" class="muted">No claims match this filter.</td>
         </tr>
         </tbody>
     </table>

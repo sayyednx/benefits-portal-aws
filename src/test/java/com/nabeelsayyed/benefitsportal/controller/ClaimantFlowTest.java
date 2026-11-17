@@ -7,6 +7,7 @@ import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import com.nabeelsayyed.benefitsportal.support.LoginAs;
+import com.nabeelsayyed.benefitsportal.support.TestData;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -47,7 +48,7 @@ class ClaimantFlowTest {
 
     private Claim fileClaim(String email) {
         ClaimRequest request = new ClaimRequest();
-        request.setClaimantName("Taylor Brooks");
+        request.setClaimantName("Taylor Brooks " + TestData.unique());
         request.setClaimantEmail(email);
         request.setEmployerName("Northside Retail");
         request.setLastDayWorked(LocalDate.now().minusDays(7));
@@ -176,5 +177,21 @@ class ClaimantFlowTest {
         Claim claim = fileClaim("kai@example.com");
         mvc.perform(get("/admin/claims/" + claim.getId() + "/documents/1"))
                 .andExpect(status().is3xxRedirection());
+    }
+
+    @Test
+    void claimantsDontSeeFraudFlagsInTheirHistory() throws Exception {
+        ClaimRequest request = new ClaimRequest();
+        request.setClaimantName("Harper Lane " + TestData.unique());
+        request.setClaimantEmail("harper@example.com");
+        request.setEmployerName("Pinnacle Bank");
+        request.setLastDayWorked(LocalDate.now().minusDays(7));
+        request.setSeparationReason(SeparationReason.LAID_OFF);
+        request.setAverageWeeklyWage(new BigDecimal("9500.00"));
+        Claim claim = claimService.fileClaim(request);
+
+        mvc.perform(get("/status/claim").session(verify(claim, "harper@example.com")))
+                .andExpect(status().isOk())
+                .andExpect(content().string(not(containsString("FLAG"))));
     }
 }

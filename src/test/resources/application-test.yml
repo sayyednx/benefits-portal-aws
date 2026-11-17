@@ -28,3 +28,6 @@ admin:
 documents:
   storage: local
   local-dir: target/test-uploads
+
+fraud:
+  high-wage-threshold: 4000.00
