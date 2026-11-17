@@ -52,6 +52,31 @@
         </p>
     </section>
 
+    <section class="card" th:if="${claim.status.name() == 'APPROVED' or !certifications.isEmpty()}">
+        <h2>Weekly certifications and payments</h2>
+        <dl class="summary">
+            <dt>Maximum benefit</dt><dd th:text="'$' + ${maximumBenefit}"></dd>
+            <dt>Paid so far</dt><dd th:text="'$' + ${totalPaid}"></dd>
+            <dt>Remaining</dt><dd th:text="'$' + ${remainingBalance}"></dd>
+        </dl>
+        <table class="claims-table" th:unless="${certifications.isEmpty()}">
+            <thead><tr><th>Week ending</th><th>Able &amp; available</th><th>Refused work</th>
+                <th>Job contacts</th><th>Earnings</th><th>Outcome</th><th>Paid</th></tr></thead>
+            <tbody>
+            <tr th:each="c : ${certifications}">
+                <td th:text="${#temporals.format(c.weekEnding, 'MMM d, yyyy')}"></td>
+                <td th:text="${c.ableAndAvailable} ? 'Yes' : 'No'"></td>
+                <td th:text="${c.refusedWork} ? 'Yes' : 'No'"></td>
+                <td th:text="${c.jobContacts}"></td>
+                <td th:text="'$' + ${c.grossEarnings}"></td>
+                <td><div th:text="${c.outcome}"></div><div class="muted" th:text="${c.outcomeReason}"></div></td>
+                <td th:text="'$' + ${c.amountPayable}"></td>
+            </tr>
+            </tbody>
+        </table>
+        <p th:if="${certifications.isEmpty()}" class="muted">No weeks certified yet.</p>
+    </section>
+
     <section class="card">
         <h2>History</h2>
         <p class="muted">Every change to this claim, oldest first. These records can't be edited or deleted.</p>

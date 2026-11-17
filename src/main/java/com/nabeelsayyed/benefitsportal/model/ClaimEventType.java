@@ -4,5 +4,7 @@ package com.nabeelsayyed.benefitsportal.model;
 public enum ClaimEventType {
     FILED,
     STATUS_CHANGED,
-    APPEAL_FILED
+    APPEAL_FILED,
+    CERTIFICATION_SUBMITTED,
+    PAYMENT_ISSUED
 }

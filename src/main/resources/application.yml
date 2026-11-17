@@ -26,6 +26,11 @@ benefits:
   min-weekly-benefit: ${BENEFITS_MIN_WEEKLY:50.00}
   # Days a claimant has to appeal a denial.
   appeal-window-days: ${BENEFITS_APPEAL_WINDOW_DAYS:30}
+  # Weekly certification and payment rules.
+  max-weeks: ${BENEFITS_MAX_WEEKS:26}
+  min-job-contacts: ${BENEFITS_MIN_JOB_CONTACTS:3}
+  earnings-disregard-rate: ${BENEFITS_EARNINGS_DISREGARD_RATE:0.25}
+  waiting-week: ${BENEFITS_WAITING_WEEK:true}
 
 # There is deliberately no default password: the app refuses to start until
 # ADMIN_PASSWORD is set (see SecurityConfig).

@@ -16,6 +16,10 @@ benefits:
   max-weekly-benefit: 500.00
   min-weekly-benefit: 50.00
   appeal-window-days: 30
+  max-weeks: 26
+  min-job-contacts: 3
+  earnings-disregard-rate: 0.25
+  waiting-week: true
 
 admin:
   username: admin

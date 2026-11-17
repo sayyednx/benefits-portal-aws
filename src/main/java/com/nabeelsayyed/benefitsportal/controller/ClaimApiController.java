@@ -5,7 +5,10 @@ import com.nabeelsayyed.benefitsportal.dto.ClaimRequest;
 import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.model.ClaimEvent;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
+import com.nabeelsayyed.benefitsportal.model.Payment;
+import com.nabeelsayyed.benefitsportal.model.WeeklyCertification;
 import com.nabeelsayyed.benefitsportal.service.AuditService;
+import com.nabeelsayyed.benefitsportal.service.CertificationService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -24,10 +27,13 @@ public class ClaimApiController {
 
     private final ClaimService claimService;
     private final AuditService auditService;
+    private final CertificationService certificationService;
 
-    public ClaimApiController(ClaimService claimService, AuditService auditService) {
+    public ClaimApiController(ClaimService claimService, AuditService auditService,
+                              CertificationService certificationService) {
         this.claimService = claimService;
         this.auditService = auditService;
+        this.certificationService = certificationService;
     }
 
     @PostMapping
@@ -51,6 +57,18 @@ public class ClaimApiController {
     public List<ClaimEvent> history(@PathVariable Long id) {
         claimService.findById(id); // 404 if the claim doesn't exist
         return auditService.historyFor(id);
+    }
+
+    @GetMapping("/{id}/certifications")
+    public List<WeeklyCertification> certifications(@PathVariable Long id) {
+        claimService.findById(id);
+        return certificationService.certificationsFor(id);
+    }
+
+    @GetMapping("/{id}/payments")
+    public List<Payment> payments(@PathVariable Long id) {
+        claimService.findById(id);
+        return certificationService.paymentsFor(id);
     }
 
     @PatchMapping("/{id}/status")

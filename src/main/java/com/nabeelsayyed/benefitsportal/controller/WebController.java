@@ -6,6 +6,7 @@ import com.nabeelsayyed.benefitsportal.exception.InvalidClaimActionException;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
 import com.nabeelsayyed.benefitsportal.service.AuditService;
+import com.nabeelsayyed.benefitsportal.service.CertificationService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -20,10 +21,13 @@ public class WebController {
 
     private final ClaimService claimService;
     private final AuditService auditService;
+    private final CertificationService certificationService;
 
-    public WebController(ClaimService claimService, AuditService auditService) {
+    public WebController(ClaimService claimService, AuditService auditService,
+                         CertificationService certificationService) {
         this.claimService = claimService;
         this.auditService = auditService;
+        this.certificationService = certificationService;
     }
 
     @GetMapping("/")
@@ -63,11 +67,16 @@ public class WebController {
         return "admin";
     }
 
-    /** One claim in full, with its audit history. */
+    /** One claim in full: details, weekly certifications and payments, and audit history. */
     @GetMapping("/admin/claims/{id}")
     public String claimDetail(@PathVariable Long id, Model model) {
-        model.addAttribute("claim", claimService.findById(id));
+        var claim = claimService.findById(id);
+        model.addAttribute("claim", claim);
         model.addAttribute("history", auditService.historyFor(id));
+        model.addAttribute("certifications", certificationService.certificationsFor(id));
+        model.addAttribute("totalPaid", certificationService.totalPaid(id));
+        model.addAttribute("maximumBenefit", certificationService.maximumBenefit(claim));
+        model.addAttribute("remainingBalance", certificationService.remainingBalance(claim));
         return "claim-detail";
     }
 

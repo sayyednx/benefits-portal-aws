@@ -1,18 +1,25 @@
 package com.nabeelsayyed.benefitsportal.controller;
 
+import com.nabeelsayyed.benefitsportal.dto.CertificationRequest;
 import com.nabeelsayyed.benefitsportal.exception.InvalidClaimActionException;
 import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.service.AuditService;
+import com.nabeelsayyed.benefitsportal.service.CertificationService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -30,10 +37,13 @@ public class ClaimantController {
 
     private final ClaimService claimService;
     private final AuditService auditService;
+    private final CertificationService certificationService;
 
-    public ClaimantController(ClaimService claimService, AuditService auditService) {
+    public ClaimantController(ClaimService claimService, AuditService auditService,
+                              CertificationService certificationService) {
         this.claimService = claimService;
         this.auditService = auditService;
+        this.certificationService = certificationService;
     }
 
     @GetMapping("/status")
@@ -72,6 +82,17 @@ public class ClaimantController {
         model.addAttribute("history", auditService.historyFor(claimId));
         model.addAttribute("canAppeal", claimService.canAppeal(claim));
         model.addAttribute("appealDeadline", claimService.appealDeadline(claim));
+
+        List<LocalDate> weeksDue = certificationService.weeksDue(claim);
+        model.addAttribute("weeksDue", weeksDue);
+        model.addAttribute("certifications", certificationService.certificationsFor(claimId));
+        model.addAttribute("totalPaid", certificationService.totalPaid(claimId));
+        model.addAttribute("remainingBalance", certificationService.remainingBalance(claim));
+        if (!model.containsAttribute("certification")) {
+            CertificationRequest form = new CertificationRequest();
+            form.setWeekEnding(weeksDue.isEmpty() ? null : weeksDue.get(0));
+            model.addAttribute("certification", form);
+        }
         return "claim-status";
     }
 
@@ -86,6 +107,29 @@ public class ClaimantController {
         try {
             claimService.fileAppeal(claimId, reason);
             redirect.addFlashAttribute("message", "Your appeal was filed. A different reviewer will look at your claim.");
+        } catch (InvalidClaimActionException ex) {
+            redirect.addFlashAttribute("error", ex.getMessage());
+        }
+        return "redirect:/status/claim";
+    }
+
+    @PostMapping("/status/certify")
+    public String certify(@Valid @ModelAttribute("certification") CertificationRequest certification,
+                          BindingResult bindingResult,
+                          HttpSession session,
+                          RedirectAttributes redirect) {
+        Long claimId = (Long) session.getAttribute(VERIFIED_CLAIM);
+        if (claimId == null) {
+            return "redirect:/status";
+        }
+        if (bindingResult.hasErrors()) {
+            redirect.addFlashAttribute("error", bindingResult.getAllErrors().get(0).getDefaultMessage());
+            redirect.addFlashAttribute("certification", certification);
+            return "redirect:/status/claim";
+        }
+        try {
+            var result = certificationService.certify(claimId, certification);
+            redirect.addFlashAttribute("message", "Week ending " + result.getWeekEnding() + ": " + result.getOutcomeReason());
         } catch (InvalidClaimActionException ex) {
             redirect.addFlashAttribute("error", ex.getMessage());
         }
