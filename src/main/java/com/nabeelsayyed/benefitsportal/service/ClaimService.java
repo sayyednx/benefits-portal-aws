@@ -10,6 +10,7 @@ import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
 import com.nabeelsayyed.benefitsportal.repository.ClaimRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -168,6 +169,9 @@ public class ClaimService {
      *
      * - the move must be allowed from the claim's current status (see ClaimStatus);
      * - a denial must say why, because claimants have a right to know the reason;
+     * - only staff can decide, and an appeal can only be decided by a supervisor who is not
+     *   the person that denied the claim (a second, independent look is the whole point of
+     *   an appeal; this is called "separation of duties");
      * - approving a claim that was found ineligible means the reviewer is overturning that
      *   finding (for example, after an appeal), so the benefit is recalculated.
      */
@@ -178,6 +182,18 @@ public class ClaimService {
         ClaimStatus to = decision.getStatus();
         String notes = decision.getReviewerNotes() == null ? null : decision.getReviewerNotes().trim();
 
+        if (!currentActor.hasRole("CASEWORKER")) {
+            throw new AccessDeniedException("Only staff can decide claims.");
+        }
+        if (from == ClaimStatus.APPEALED) {
+            if (!currentActor.hasRole("SUPERVISOR")) {
+                throw new AccessDeniedException("Only a supervisor can decide an appeal.");
+            }
+            if (currentActor.name().equalsIgnoreCase(claim.getReviewedBy())) {
+                throw new AccessDeniedException(
+                        "You denied this claim, so a different supervisor has to decide the appeal.");
+            }
+        }
         if (!from.staffCanMoveTo().contains(to)) {
             throw new InvalidClaimActionException(
                     "A claim that is " + from + " can't be moved to " + to + ".");

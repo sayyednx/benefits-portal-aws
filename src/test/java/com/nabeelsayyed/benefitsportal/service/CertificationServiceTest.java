@@ -8,6 +8,7 @@ import com.nabeelsayyed.benefitsportal.model.CertificationOutcome;
 import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
+import com.nabeelsayyed.benefitsportal.support.LoginAs;
 import com.nabeelsayyed.benefitsportal.support.MutableClock;
 import com.nabeelsayyed.benefitsportal.support.TestClockConfig;
 import org.junit.jupiter.api.BeforeEach;
@@ -67,7 +68,7 @@ class CertificationServiceTest {
         for (ClaimStatus to : new ClaimStatus[]{ClaimStatus.UNDER_REVIEW, ClaimStatus.APPROVED}) {
             ClaimDecisionRequest decision = new ClaimDecisionRequest();
             decision.setStatus(to);
-            claimService.decide(claim.getId(), decision);
+            LoginAs.caseworker("casey", () -> claimService.decide(claim.getId(), decision));
         }
         return claimService.findById(claim.getId());
     }

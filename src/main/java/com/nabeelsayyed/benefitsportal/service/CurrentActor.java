@@ -19,4 +19,11 @@ public class CurrentActor {
         }
         return auth.getName();
     }
+
+    /** Whether the current user has a role, e.g. hasRole("SUPERVISOR"). */
+    public boolean hasRole(String role) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        return auth != null && auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
+    }
 }

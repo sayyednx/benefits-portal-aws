@@ -97,3 +97,5 @@ fieldset { border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px;
 fieldset label { margin-right: 16px; }
 .stack label { font-weight: 600; font-size: 0.9rem; }
 fieldset label { font-weight: normal; }
+.spaced { margin-top: 24px; }
+.narrow-form { max-width: 420px; }

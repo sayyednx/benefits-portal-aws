@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
 <!-- Header for public (claimant) pages -->
@@ -20,6 +20,8 @@
         <a th:href="@{/admin/claims}" class="brand">Benefits Portal — Staff</a>
         <nav>
             <a th:href="@{/admin/claims}">Claims queue</a>
+            <a th:href="@{/admin/staff}" sec:authorize="hasRole('SUPERVISOR')">Staff</a>
+            <span class="muted" sec:authentication="name"></span>
             <form th:action="@{/admin/logout}" method="post" class="logout-form">
                 <button type="submit" class="link-btn">Log out</button>
             </form>

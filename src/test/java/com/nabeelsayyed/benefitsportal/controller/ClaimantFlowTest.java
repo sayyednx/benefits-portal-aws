@@ -6,6 +6,7 @@ import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
+import com.nabeelsayyed.benefitsportal.support.LoginAs;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -115,11 +116,11 @@ class ClaimantFlowTest {
         Claim claim = fileClaim("drew@example.com");
         ClaimDecisionRequest review = new ClaimDecisionRequest();
         review.setStatus(ClaimStatus.UNDER_REVIEW);
-        claimService.decide(claim.getId(), review);
+        LoginAs.caseworker("casey", () -> claimService.decide(claim.getId(), review));
         ClaimDecisionRequest deny = new ClaimDecisionRequest();
         deny.setStatus(ClaimStatus.DENIED);
         deny.setReviewerNotes("Employer says you were offered continued work.");
-        claimService.decide(claim.getId(), deny);
+        LoginAs.caseworker("casey", () -> claimService.decide(claim.getId(), deny));
 
         MockHttpSession session = verify(claim, "drew@example.com");
         mvc.perform(get("/status/claim").session(session))

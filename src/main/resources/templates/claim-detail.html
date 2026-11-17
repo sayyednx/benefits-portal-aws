@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -39,6 +39,10 @@
 
     <section class="card">
         <h2>Make a decision</h2>
+        <p th:if="${claim.status.name() == 'APPEALED'}" class="muted">
+            Appeals are decided by a supervisor who did not deny the claim
+            (<span th:text="${claim.reviewedBy}"></span> denied it).
+        </p>
         <form th:unless="${claim.status.finalForStaff}"
               th:action="@{/admin/claims/{id}/decision(id=${claim.id})}" method="post" class="decision-form">
             <select name="status" aria-label="New status">

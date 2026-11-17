@@ -80,6 +80,7 @@ class ClaimServiceTest {
     }
 
     @Test
+    @org.springframework.security.test.context.support.WithMockUser(username = "pat", roles = "CASEWORKER")
     void decidingAClaimUpdatesStatusAndReviewMetadata() {
         Claim filed = claimService.fileClaim(requestWith(SeparationReason.LAID_OFF, "600.00"));
         var review = new com.nabeelsayyed.benefitsportal.dto.ClaimDecisionRequest();

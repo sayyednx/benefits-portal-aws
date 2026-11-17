@@ -53,7 +53,7 @@ class AuditHistoryTest {
     }
 
     @Test
-    @WithMockUser(username = "pat.caseworker", roles = "ADMIN")
+    @WithMockUser(username = "pat.caseworker", roles = "CASEWORKER")
     void aDecisionRecordsWhoChangedWhatAndWhy() {
         Claim claim = fileClaim();
         ClaimDecisionRequest decision = new ClaimDecisionRequest();

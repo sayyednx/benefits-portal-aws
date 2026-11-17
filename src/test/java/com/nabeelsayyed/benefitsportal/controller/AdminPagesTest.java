@@ -53,7 +53,7 @@ class AdminPagesTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "CASEWORKER")
     void claimDetailPageShowsTheHistory() throws Exception {
         Claim claim = fileClaim();
         mvc.perform(get("/admin/claims/" + claim.getId()))
@@ -63,7 +63,7 @@ class AdminPagesTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "CASEWORKER")
     void historyApiReturnsTheEventsAsJson() throws Exception {
         Claim claim = fileClaim();
         mvc.perform(get("/api/claims/" + claim.getId() + "/history"))
@@ -73,7 +73,7 @@ class AdminPagesTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "CASEWORKER")
     void queuePageRenders() throws Exception {
         fileClaim();
         mvc.perform(get("/admin/claims"))
@@ -82,7 +82,7 @@ class AdminPagesTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "CASEWORKER")
     void aBrokenRuleOnTheWebPageShowsAMessageInsteadOfAnErrorPage() throws Exception {
         Claim claim = fileClaim();
         mvc.perform(post("/admin/claims/" + claim.getId() + "/decision").with(csrf())
@@ -92,7 +92,7 @@ class AdminPagesTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "CASEWORKER")
     void aBrokenRuleOnTheApiReturns409() throws Exception {
         Claim claim = fileClaim();
         mvc.perform(patch("/api/claims/" + claim.getId() + "/status")

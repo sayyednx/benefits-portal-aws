@@ -6,6 +6,7 @@ import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
+import com.nabeelsayyed.benefitsportal.support.LoginAs;
 import com.nabeelsayyed.benefitsportal.support.MutableClock;
 import com.nabeelsayyed.benefitsportal.support.TestClockConfig;
 import org.junit.jupiter.api.Test;
@@ -57,7 +58,7 @@ class CertificationPagesTest {
         for (ClaimStatus to : new ClaimStatus[]{ClaimStatus.UNDER_REVIEW, ClaimStatus.APPROVED}) {
             ClaimDecisionRequest decision = new ClaimDecisionRequest();
             decision.setStatus(to);
-            claimService.decide(claim.getId(), decision);
+            LoginAs.caseworker("casey", () -> claimService.decide(claim.getId(), decision));
         }
         return claim;
     }
@@ -101,7 +102,7 @@ class CertificationPagesTest {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "CASEWORKER")
     void staffSeeTheCertificationsAndBalance() throws Exception {
         Claim claim = approvedClaim();
         mvc.perform(get("/admin/claims/" + claim.getId()))
