@@ -3,7 +3,9 @@ package com.nabeelsayyed.benefitsportal.controller;
 import com.nabeelsayyed.benefitsportal.dto.ClaimDecisionRequest;
 import com.nabeelsayyed.benefitsportal.dto.ClaimRequest;
 import com.nabeelsayyed.benefitsportal.model.Claim;
+import com.nabeelsayyed.benefitsportal.model.ClaimEvent;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
+import com.nabeelsayyed.benefitsportal.service.AuditService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -21,9 +23,11 @@ import java.util.List;
 public class ClaimApiController {
 
     private final ClaimService claimService;
+    private final AuditService auditService;
 
-    public ClaimApiController(ClaimService claimService) {
+    public ClaimApiController(ClaimService claimService, AuditService auditService) {
         this.claimService = claimService;
+        this.auditService = auditService;
     }
 
     @PostMapping
@@ -40,6 +44,13 @@ public class ClaimApiController {
     @GetMapping("/{id}")
     public Claim getClaim(@PathVariable Long id) {
         return claimService.findById(id);
+    }
+
+    /** The claim's full audit history, oldest first. */
+    @GetMapping("/{id}/history")
+    public List<ClaimEvent> history(@PathVariable Long id) {
+        claimService.findById(id); // 404 if the claim doesn't exist
+        return auditService.historyFor(id);
     }
 
     @PatchMapping("/{id}/status")

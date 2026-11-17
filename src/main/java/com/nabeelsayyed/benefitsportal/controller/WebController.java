@@ -2,7 +2,9 @@ package com.nabeelsayyed.benefitsportal.controller;
 
 import com.nabeelsayyed.benefitsportal.dto.ClaimDecisionRequest;
 import com.nabeelsayyed.benefitsportal.dto.ClaimRequest;
+import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
+import com.nabeelsayyed.benefitsportal.service.AuditService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
@@ -15,9 +17,11 @@ import org.springframework.web.bind.annotation.*;
 public class WebController {
 
     private final ClaimService claimService;
+    private final AuditService auditService;
 
-    public WebController(ClaimService claimService) {
+    public WebController(ClaimService claimService, AuditService auditService) {
         this.claimService = claimService;
+        this.auditService = auditService;
     }
 
     @GetMapping("/")
@@ -51,20 +55,29 @@ public class WebController {
     public String adminDashboard(@RequestParam(required = false) String status, Model model) {
         model.addAttribute("claims", status == null || status.isBlank()
                 ? claimService.findAll()
-                : claimService.findByStatus(com.nabeelsayyed.benefitsportal.model.ClaimStatus.valueOf(status)));
-        model.addAttribute("statuses", com.nabeelsayyed.benefitsportal.model.ClaimStatus.values());
+                : claimService.findByStatus(ClaimStatus.valueOf(status)));
+        model.addAttribute("statuses", ClaimStatus.values());
         model.addAttribute("selectedStatus", status);
         return "admin";
     }
 
+    /** One claim in full, with its audit history. */
+    @GetMapping("/admin/claims/{id}")
+    public String claimDetail(@PathVariable Long id, Model model) {
+        model.addAttribute("claim", claimService.findById(id));
+        model.addAttribute("history", auditService.historyFor(id));
+        model.addAttribute("statuses", ClaimStatus.values());
+        return "claim-detail";
+    }
+
     @PostMapping("/admin/claims/{id}/decision")
     public String decide(@PathVariable Long id,
-                          @RequestParam com.nabeelsayyed.benefitsportal.model.ClaimStatus status,
+                          @RequestParam ClaimStatus status,
                           @RequestParam(required = false) String reviewerNotes) {
         ClaimDecisionRequest decision = new ClaimDecisionRequest();
         decision.setStatus(status);
         decision.setReviewerNotes(reviewerNotes);
         claimService.decide(id, decision);
-        return "redirect:/admin/claims";
+        return "redirect:/admin/claims/" + id;
     }
 }

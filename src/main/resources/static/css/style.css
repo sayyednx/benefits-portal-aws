@@ -75,3 +75,8 @@ h1 { font-size: 1.5rem; margin-bottom: 8px; }
 .decision-form { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .decision-form input[type="text"] { width: 120px; padding: 4px 6px; border: 1px solid var(--line); border-radius: 4px; }
 .decision-form select { padding: 4px; border: 1px solid var(--line); border-radius: 4px; }
+
+h2 { font-size: 1.1rem; margin-top: 0; }
+.decision-form input.wide { width: 260px; }
+.timeline { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.timeline li { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; }

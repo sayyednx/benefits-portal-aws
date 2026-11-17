@@ -35,7 +35,7 @@
         </thead>
         <tbody>
         <tr th:each="claim : ${claims}">
-            <td th:text="${claim.id}"></td>
+            <td><a th:href="@{/admin/claims/{id}(id=${claim.id})}" th:text="${claim.id}"></a></td>
             <td>
                 <div th:text="${claim.claimantName}"></div>
                 <div class="muted" th:text="${claim.claimantEmail}"></div>

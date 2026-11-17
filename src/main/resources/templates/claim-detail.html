@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Claim ' + ${claim.id} + ' — Benefits Portal'">Claim — Benefits Portal</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header class="site-header">
+    <div class="wrap">
+        <span class="brand">Benefits Portal — Admin</span>
+        <form th:action="@{/admin/logout}" method="post" class="logout-form">
+            <button type="submit" class="link-btn">Log out</button>
+        </form>
+    </div>
+</header>
+
+<main class="wrap">
+    <p><a th:href="@{/admin/claims}">&larr; Back to the claims queue</a></p>
+    <h1>Claim #<span th:text="${claim.id}"></span>: <span th:text="${claim.claimantName}"></span></h1>
+
+    <section class="card">
+        <h2>Details</h2>
+        <dl class="summary">
+            <dt>Status</dt><dd th:text="${claim.status}"></dd>
+            <dt>Email</dt><dd th:text="${claim.claimantEmail}"></dd>
+            <dt>Employer</dt><dd th:text="${claim.employerName}"></dd>
+            <dt>Last day worked</dt><dd th:text="${#temporals.format(claim.lastDayWorked, 'MMM d, yyyy')}"></dd>
+            <dt>Reason</dt><dd th:text="${claim.separationReason}"></dd>
+            <dt>Weekly wage</dt><dd th:text="'$' + ${claim.averageWeeklyWage}"></dd>
+            <dt>Weekly benefit</dt><dd th:text="'$' + ${claim.weeklyBenefitAmount}"></dd>
+            <dt>Filed</dt><dd th:text="${#temporals.format(claim.filedAt, 'MMM d, yyyy h:mm a')}"></dd>
+            <dt>Last decision by</dt><dd th:text="${claim.reviewedBy ?: '—'}"></dd>
+        </dl>
+    </section>
+
+    <section class="card">
+        <h2>Make a decision</h2>
+        <form th:action="@{/admin/claims/{id}/decision(id=${claim.id})}" method="post" class="decision-form">
+            <select name="status" aria-label="New status">
+                <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
+                        th:selected="${s == claim.status}"></option>
+            </select>
+            <input type="text" name="reviewerNotes" placeholder="Notes" aria-label="Notes" class="wide">
+            <button type="submit" class="btn-small">Save</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>History</h2>
+        <p class="muted">Every change to this claim, oldest first. These records can't be edited or deleted.</p>
+        <ol class="timeline">
+            <li th:each="e : ${history}">
+                <div>
+                    <strong th:text="${e.type}"></strong>
+                    <span th:if="${e.fromStatus != null or e.toStatus != null}"
+                          th:text="${(e.fromStatus ?: '—') + ' → ' + (e.toStatus ?: '—')}"></span>
+                </div>
+                <div class="muted">
+                    <span th:text="${#temporals.format(e.occurredAt, 'MMM d, yyyy h:mm a')}"></span>
+                    by <span th:text="${e.actor}"></span>
+                </div>
+                <div th:if="${e.details}" th:text="${e.details}"></div>
+            </li>
+        </ol>
+    </section>
+</main>
+</body>
+</html>

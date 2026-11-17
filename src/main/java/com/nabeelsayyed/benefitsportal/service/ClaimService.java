@@ -4,6 +4,7 @@ import com.nabeelsayyed.benefitsportal.dto.ClaimDecisionRequest;
 import com.nabeelsayyed.benefitsportal.dto.ClaimRequest;
 import com.nabeelsayyed.benefitsportal.exception.ClaimNotFoundException;
 import com.nabeelsayyed.benefitsportal.model.Claim;
+import com.nabeelsayyed.benefitsportal.model.ClaimEventType;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
 import com.nabeelsayyed.benefitsportal.repository.ClaimRepository;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +23,9 @@ import java.util.Set;
 public class ClaimService {
 
     private final ClaimRepository claimRepository;
+    private final AuditService auditService;
+    private final CurrentActor currentActor;
+    private final Clock clock;
 
     /**
      * The percentage of average weekly wage paid out as a benefit. Real state systems
@@ -48,8 +53,12 @@ public class ClaimService {
             SeparationReason.QUIT_NO_CAUSE
     );
 
-    public ClaimService(ClaimRepository claimRepository) {
+    public ClaimService(ClaimRepository claimRepository, AuditService auditService,
+                        CurrentActor currentActor, Clock clock) {
         this.claimRepository = claimRepository;
+        this.auditService = auditService;
+        this.currentActor = currentActor;
+        this.clock = clock;
     }
 
     @Transactional
@@ -60,7 +69,8 @@ public class ClaimService {
                 request.getEmployerName(),
                 request.getLastDayWorked(),
                 request.getSeparationReason(),
-                request.getAverageWeeklyWage()
+                request.getAverageWeeklyWage(),
+                LocalDateTime.now(clock)
         );
 
         boolean eligible = isMonetarilyEligible(claim.getSeparationReason());
@@ -68,7 +78,11 @@ public class ClaimService {
         claim.setWeeklyBenefitAmount(eligible ? calculateWeeklyBenefit(claim.getAverageWeeklyWage()) : BigDecimal.ZERO);
         claim.setStatus(ClaimStatus.FILED);
 
-        return claimRepository.save(claim);
+        Claim saved = claimRepository.save(claim);
+        auditService.record(saved.getId(), ClaimEventType.FILED, null, ClaimStatus.FILED,
+                eligible ? "Weekly benefit calculated: $" + saved.getWeeklyBenefitAmount()
+                         : "Not monetarily eligible: " + saved.getSeparationReason());
+        return saved;
     }
 
     /**
@@ -115,9 +129,14 @@ public class ClaimService {
     @Transactional
     public Claim decide(Long id, ClaimDecisionRequest decision) {
         Claim claim = findById(id);
+        ClaimStatus from = claim.getStatus();
         claim.setStatus(decision.getStatus());
         claim.setReviewerNotes(decision.getReviewerNotes());
-        claim.setReviewedAt(LocalDateTime.now());
-        return claimRepository.save(claim);
+        claim.setReviewedAt(LocalDateTime.now(clock));
+        claim.setReviewedBy(currentActor.name());
+        Claim saved = claimRepository.save(claim);
+        auditService.record(saved.getId(), ClaimEventType.STATUS_CHANGED, from, decision.getStatus(),
+                decision.getReviewerNotes());
+        return saved;
     }
 }

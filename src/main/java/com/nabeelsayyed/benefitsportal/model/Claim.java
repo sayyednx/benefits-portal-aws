@@ -1,6 +1,8 @@
 package com.nabeelsayyed.benefitsportal.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -27,7 +29,8 @@ public class Claim {
     private LocalDate lastDayWorked;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 32)
     private SeparationReason separationReason;
 
     /** What the claimant reports earning per week while employed. Drives the benefit calc below. */
@@ -42,14 +45,23 @@ public class Claim {
     @Column(nullable = false)
     private boolean eligible;
 
+    /*
+     * Stored as plain text (VARCHAR) rather than a MySQL ENUM column. With an ENUM column,
+     * adding a new status later (like APPEALED) would need a manual database change first.
+     */
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @JdbcTypeCode(SqlTypes.VARCHAR)
+    @Column(nullable = false, length = 32)
     private ClaimStatus status = ClaimStatus.FILED;
 
     @Column(nullable = false)
     private LocalDateTime filedAt;
 
     private LocalDateTime reviewedAt;
+
+    /** Username of the staff member who made the most recent decision on this claim. */
+    @Column(length = 100)
+    private String reviewedBy;
 
     @Column(length = 1000)
     private String reviewerNotes;
@@ -60,14 +72,14 @@ public class Claim {
 
     public Claim(String claimantName, String claimantEmail, String employerName,
                  LocalDate lastDayWorked, SeparationReason separationReason,
-                 BigDecimal averageWeeklyWage) {
+                 BigDecimal averageWeeklyWage, LocalDateTime filedAt) {
         this.claimantName = claimantName;
         this.claimantEmail = claimantEmail;
         this.employerName = employerName;
         this.lastDayWorked = lastDayWorked;
         this.separationReason = separationReason;
         this.averageWeeklyWage = averageWeeklyWage;
-        this.filedAt = LocalDateTime.now();
+        this.filedAt = filedAt;
     }
 
     // --- getters / setters ---
@@ -134,6 +146,14 @@ public class Claim {
 
     public void setReviewedAt(LocalDateTime reviewedAt) {
         this.reviewedAt = reviewedAt;
+    }
+
+    public String getReviewedBy() {
+        return reviewedBy;
+    }
+
+    public void setReviewedBy(String reviewedBy) {
+        this.reviewedBy = reviewedBy;
     }
 
     public String getReviewerNotes() {
