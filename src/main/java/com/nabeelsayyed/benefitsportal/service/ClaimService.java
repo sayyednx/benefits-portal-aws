@@ -3,6 +3,7 @@ package com.nabeelsayyed.benefitsportal.service;
 import com.nabeelsayyed.benefitsportal.dto.ClaimDecisionRequest;
 import com.nabeelsayyed.benefitsportal.dto.ClaimRequest;
 import com.nabeelsayyed.benefitsportal.exception.ClaimNotFoundException;
+import com.nabeelsayyed.benefitsportal.exception.InvalidClaimActionException;
 import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.model.ClaimEventType;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +44,13 @@ public class ClaimService {
     /** The minimum weekly benefit paid to anyone found monetarily eligible. */
     @Value("${benefits.min-weekly-benefit:50.00}")
     private BigDecimal minWeeklyBenefit;
+
+    /**
+     * How many days a claimant has to appeal a denial, counted from the day of the decision.
+     * Most states give somewhere between 10 and 30 days.
+     */
+    @Value("${benefits.appeal-window-days:30}")
+    private int appealWindowDays;
 
     /**
      * Separation reasons that disqualify a claimant outright, mirroring the real-world
@@ -126,17 +135,90 @@ public class ClaimService {
         return claimRepository.findById(id).orElseThrow(() -> new ClaimNotFoundException(id));
     }
 
+    /**
+     * A staff decision on a claim. Enforces the program's rules before anything is saved:
+     *
+     * - the move must be allowed from the claim's current status (see ClaimStatus);
+     * - a denial must say why, because claimants have a right to know the reason;
+     * - approving a claim that was found ineligible means the reviewer is overturning that
+     *   finding (for example, after an appeal), so the benefit is recalculated.
+     */
     @Transactional
     public Claim decide(Long id, ClaimDecisionRequest decision) {
         Claim claim = findById(id);
         ClaimStatus from = claim.getStatus();
-        claim.setStatus(decision.getStatus());
-        claim.setReviewerNotes(decision.getReviewerNotes());
+        ClaimStatus to = decision.getStatus();
+        String notes = decision.getReviewerNotes() == null ? null : decision.getReviewerNotes().trim();
+
+        if (!from.staffCanMoveTo().contains(to)) {
+            throw new InvalidClaimActionException(
+                    "A claim that is " + from + " can't be moved to " + to + ".");
+        }
+        if (to == ClaimStatus.DENIED && (notes == null || notes.isEmpty())) {
+            throw new InvalidClaimActionException("Add a note explaining why the claim is denied.");
+        }
+
+        String details = notes;
+        if (to == ClaimStatus.APPROVED && !claim.isEligible()) {
+            claim.setEligible(true);
+            claim.setWeeklyBenefitAmount(calculateWeeklyBenefit(claim.getAverageWeeklyWage()));
+            details = "Ineligibility finding overturned; weekly benefit set to $"
+                    + claim.getWeeklyBenefitAmount() + (notes == null || notes.isEmpty() ? "" : ". " + notes);
+        }
+
+        claim.setStatus(to);
+        claim.setReviewerNotes(notes);
         claim.setReviewedAt(LocalDateTime.now(clock));
         claim.setReviewedBy(currentActor.name());
         Claim saved = claimRepository.save(claim);
-        auditService.record(saved.getId(), ClaimEventType.STATUS_CHANGED, from, decision.getStatus(),
-                decision.getReviewerNotes());
+        auditService.record(saved.getId(), ClaimEventType.STATUS_CHANGED, from, to, details);
+        return saved;
+    }
+
+    /** The last day the claimant may appeal, or null if the claim isn't denied. */
+    public LocalDate appealDeadline(Claim claim) {
+        if (claim.getStatus() != ClaimStatus.DENIED || claim.getReviewedAt() == null) {
+            return null;
+        }
+        return claim.getReviewedAt().toLocalDate().plusDays(appealWindowDays);
+    }
+
+    /** Whether the claimant can still appeal: denied, never appealed, and inside the window. */
+    public boolean canAppeal(Claim claim) {
+        LocalDate deadline = appealDeadline(claim);
+        return deadline != null
+                && claim.getAppealedAt() == null
+                && !LocalDate.now(clock).isAfter(deadline);
+    }
+
+    /**
+     * The claimant asks for a second look at a denial. Checking that the person really is
+     * the claimant is the caller's job (see the "check my claim" page); this method only
+     * enforces the program's appeal rules.
+     */
+    @Transactional
+    public Claim fileAppeal(Long id, String reason) {
+        Claim claim = findById(id);
+        if (claim.getStatus() != ClaimStatus.DENIED) {
+            throw new InvalidClaimActionException("Only a denied claim can be appealed.");
+        }
+        if (claim.getAppealedAt() != null) {
+            throw new InvalidClaimActionException("This claim has already been appealed once.");
+        }
+        if (!canAppeal(claim)) {
+            throw new InvalidClaimActionException(
+                    "The deadline to appeal was " + appealDeadline(claim) + ".");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new InvalidClaimActionException("Tell us why you think the decision was wrong.");
+        }
+
+        claim.setStatus(ClaimStatus.APPEALED);
+        claim.setAppealedAt(LocalDateTime.now(clock));
+        claim.setAppealReason(reason.trim());
+        Claim saved = claimRepository.save(claim);
+        auditService.record(saved.getId(), ClaimEventType.APPEAL_FILED,
+                ClaimStatus.DENIED, ClaimStatus.APPEALED, reason.trim());
         return saved;
     }
 }

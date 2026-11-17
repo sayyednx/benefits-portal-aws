@@ -16,7 +16,10 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 /** Renders the staff pages for real, so a broken template fails the build instead of a demo. */
@@ -76,5 +79,26 @@ class AdminPagesTest {
         mvc.perform(get("/admin/claims"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Claims queue")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void aBrokenRuleOnTheWebPageShowsAMessageInsteadOfAnErrorPage() throws Exception {
+        Claim claim = fileClaim();
+        mvc.perform(post("/admin/claims/" + claim.getId() + "/decision").with(csrf())
+                        .param("status", "APPROVED"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(flash().attribute("error", containsString("can't be moved")));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void aBrokenRuleOnTheApiReturns409() throws Exception {
+        Claim claim = fileClaim();
+        mvc.perform(patch("/api/claims/" + claim.getId() + "/status")
+                        .contentType("application/json")
+                        .content("{\"status\":\"APPROVED\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value(containsString("can't be moved")));
     }
 }

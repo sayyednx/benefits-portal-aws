@@ -66,6 +66,13 @@ public class Claim {
     @Column(length = 1000)
     private String reviewerNotes;
 
+    /** When the claimant appealed a denial. A claim can only be appealed once. */
+    private LocalDateTime appealedAt;
+
+    /** The claimant's own words on why the denial was wrong. */
+    @Column(length = 2000)
+    private String appealReason;
+
     protected Claim() {
         // JPA
     }
@@ -162,5 +169,21 @@ public class Claim {
 
     public void setReviewerNotes(String reviewerNotes) {
         this.reviewerNotes = reviewerNotes;
+    }
+
+    public LocalDateTime getAppealedAt() {
+        return appealedAt;
+    }
+
+    public void setAppealedAt(LocalDateTime appealedAt) {
+        this.appealedAt = appealedAt;
+    }
+
+    public String getAppealReason() {
+        return appealReason;
+    }
+
+    public void setAppealReason(String appealReason) {
+        this.appealReason = appealReason;
     }
 }

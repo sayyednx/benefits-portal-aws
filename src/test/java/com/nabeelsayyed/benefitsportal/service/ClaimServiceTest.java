@@ -82,6 +82,9 @@ class ClaimServiceTest {
     @Test
     void decidingAClaimUpdatesStatusAndReviewMetadata() {
         Claim filed = claimService.fileClaim(requestWith(SeparationReason.LAID_OFF, "600.00"));
+        var review = new com.nabeelsayyed.benefitsportal.dto.ClaimDecisionRequest();
+        review.setStatus(ClaimStatus.UNDER_REVIEW);
+        claimService.decide(filed.getId(), review);
 
         var decision = new com.nabeelsayyed.benefitsportal.dto.ClaimDecisionRequest();
         decision.setStatus(ClaimStatus.APPROVED);

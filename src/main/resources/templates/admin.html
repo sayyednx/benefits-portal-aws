@@ -48,17 +48,11 @@
                 <span th:if="${claim.eligible}" class="status-pill status-approved">Yes</span>
                 <span th:unless="${claim.eligible}" class="status-pill status-denied">No</span>
             </td>
-            <td th:text="${claim.status}"></td>
+            <td><span th:text="${claim.status}" th:classappend="'status-' + ${#strings.toLowerCase(claim.status)}" class="status-pill"></span></td>
             <td th:text="${#temporals.format(claim.filedAt, 'MMM d, h:mm a')}"></td>
             <td>
-                <form th:action="@{/admin/claims/{id}/decision(id=${claim.id})}" method="post" class="decision-form">
-                    <select name="status">
-                        <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
-                                th:selected="${s == claim.status}"></option>
-                    </select>
-                    <input type="text" name="reviewerNotes" placeholder="Notes (optional)" th:value="${claim.reviewerNotes}">
-                    <button type="submit" class="btn-small">Save</button>
-                </form>
+                <a th:href="@{/admin/claims/{id}(id=${claim.id})}"
+                   th:text="${claim.status.finalForStaff} ? 'View' : 'Review'" class="btn-small"></a>
             </td>
         </tr>
         <tr th:if="${claims.isEmpty()}">

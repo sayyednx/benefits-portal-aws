@@ -34,16 +34,28 @@
         </dl>
     </section>
 
+    <p class="flash flash-ok" th:if="${message}" th:text="${message}" role="status"></p>
+    <p class="flash flash-error" th:if="${error}" th:text="${error}" role="alert"></p>
+
+    <section class="card" th:if="${claim.appealedAt != null}">
+        <h2>Appeal</h2>
+        <p class="muted" th:text="'Filed ' + ${#temporals.format(claim.appealedAt, 'MMM d, yyyy h:mm a')}"></p>
+        <p th:text="${claim.appealReason}"></p>
+    </section>
+
     <section class="card">
         <h2>Make a decision</h2>
-        <form th:action="@{/admin/claims/{id}/decision(id=${claim.id})}" method="post" class="decision-form">
+        <form th:unless="${claim.status.finalForStaff}"
+              th:action="@{/admin/claims/{id}/decision(id=${claim.id})}" method="post" class="decision-form">
             <select name="status" aria-label="New status">
-                <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}"
-                        th:selected="${s == claim.status}"></option>
+                <option th:each="s : ${claim.status.staffCanMoveTo()}" th:value="${s}" th:text="${s}"></option>
             </select>
-            <input type="text" name="reviewerNotes" placeholder="Notes" aria-label="Notes" class="wide">
+            <input type="text" name="reviewerNotes" placeholder="Notes (required to deny)" aria-label="Notes" class="wide">
             <button type="submit" class="btn-small">Save</button>
         </form>
+        <p th:if="${claim.status.finalForStaff}" class="muted">
+            No staff action is left on this claim. A denied claim can only move again if the claimant appeals.
+        </p>
     </section>
 
     <section class="card">

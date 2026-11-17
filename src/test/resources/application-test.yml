@@ -15,6 +15,7 @@ benefits:
   wage-replacement-rate: 0.5
   max-weekly-benefit: 500.00
   min-weekly-benefit: 50.00
+  appeal-window-days: 30
 
 admin:
   username: admin

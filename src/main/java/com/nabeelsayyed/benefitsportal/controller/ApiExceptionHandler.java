@@ -1,21 +1,30 @@
 package com.nabeelsayyed.benefitsportal.controller;
 
 import com.nabeelsayyed.benefitsportal.exception.ClaimNotFoundException;
+import com.nabeelsayyed.benefitsportal.exception.InvalidClaimActionException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@RestControllerAdvice
+/** Turns errors into JSON, for the API only. The web pages handle their own errors. */
+@RestControllerAdvice(annotations = RestController.class)
 public class ApiExceptionHandler {
 
     @ExceptionHandler(ClaimNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleNotFound(ClaimNotFoundException ex) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", ex.getMessage()));
+    }
+
+    /** 409 Conflict: the request was understood, but the program's rules don't allow it. */
+    @ExceptionHandler(InvalidClaimActionException.class)
+    public ResponseEntity<Map<String, String>> handleRuleBroken(InvalidClaimActionException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", ex.getMessage()));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

@@ -24,6 +24,8 @@ benefits:
   wage-replacement-rate: ${BENEFITS_WAGE_REPLACEMENT_RATE:0.5}
   max-weekly-benefit: ${BENEFITS_MAX_WEEKLY:500.00}
   min-weekly-benefit: ${BENEFITS_MIN_WEEKLY:50.00}
+  # Days a claimant has to appeal a denial.
+  appeal-window-days: ${BENEFITS_APPEAL_WINDOW_DAYS:30}
 
 # There is deliberately no default password: the app refuses to start until
 # ADMIN_PASSWORD is set (see SecurityConfig).

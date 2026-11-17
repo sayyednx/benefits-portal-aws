@@ -80,3 +80,8 @@ h2 { font-size: 1.1rem; margin-top: 0; }
 .decision-form input.wide { width: 260px; }
 .timeline { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
 .timeline li { border-left: 3px solid var(--accent); padding: 4px 0 4px 12px; }
+.status-filed, .status-under_review { background: #e5ecf4; color: var(--accent); }
+.status-appealed { background: #f6ecd6; color: #855d10; }
+.flash { padding: 10px 14px; border-radius: 6px; font-weight: 600; }
+.flash-ok { background: var(--good-bg); color: var(--good); }
+.flash-error { background: var(--bad-bg); color: var(--bad); }
