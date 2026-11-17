@@ -24,3 +24,7 @@ benefits:
 admin:
   username: admin
   password: test-password-123
+
+documents:
+  storage: local
+  local-dir: target/test-uploads

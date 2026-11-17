@@ -9,8 +9,13 @@ import com.nabeelsayyed.benefitsportal.model.StaffRole;
 import com.nabeelsayyed.benefitsportal.service.AuditService;
 import com.nabeelsayyed.benefitsportal.service.CertificationService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
+import com.nabeelsayyed.benefitsportal.service.DocumentService;
 import com.nabeelsayyed.benefitsportal.service.StaffService;
 import jakarta.validation.Valid;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,13 +31,16 @@ public class WebController {
     private final AuditService auditService;
     private final CertificationService certificationService;
     private final StaffService staffService;
+    private final DocumentService documentService;
 
     public WebController(ClaimService claimService, AuditService auditService,
-                         CertificationService certificationService, StaffService staffService) {
+                         CertificationService certificationService, StaffService staffService,
+                         DocumentService documentService) {
         this.claimService = claimService;
         this.auditService = auditService;
         this.certificationService = certificationService;
         this.staffService = staffService;
+        this.documentService = documentService;
     }
 
     @GetMapping("/")
@@ -82,6 +90,7 @@ public class WebController {
         model.addAttribute("totalPaid", certificationService.totalPaid(id));
         model.addAttribute("maximumBenefit", certificationService.maximumBenefit(claim));
         model.addAttribute("remainingBalance", certificationService.remainingBalance(claim));
+        model.addAttribute("documents", documentService.documentsFor(id));
         return "claim-detail";
     }
 
@@ -100,6 +109,17 @@ public class WebController {
             redirect.addFlashAttribute("error", ex.getMessage());
         }
         return "redirect:/admin/claims/" + id;
+    }
+
+    /** Staff download of an uploaded document. Always a download, never shown inline in the browser. */
+    @GetMapping("/admin/claims/{id}/documents/{documentId}")
+    public ResponseEntity<byte[]> downloadDocument(@PathVariable Long id, @PathVariable Long documentId) {
+        var content = documentService.download(id, documentId);
+        return ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(content.document().getContentType()))
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment()
+                        .filename(content.document().getOriginalFilename()).build().toString())
+                .body(content.bytes());
     }
 
     // --- Staff accounts (supervisors only; see SecurityConfig) ---

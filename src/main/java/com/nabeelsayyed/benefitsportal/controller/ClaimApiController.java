@@ -3,6 +3,7 @@ package com.nabeelsayyed.benefitsportal.controller;
 import com.nabeelsayyed.benefitsportal.dto.ClaimDecisionRequest;
 import com.nabeelsayyed.benefitsportal.dto.ClaimRequest;
 import com.nabeelsayyed.benefitsportal.model.Claim;
+import com.nabeelsayyed.benefitsportal.model.ClaimDocument;
 import com.nabeelsayyed.benefitsportal.model.ClaimEvent;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.Payment;
@@ -10,6 +11,7 @@ import com.nabeelsayyed.benefitsportal.model.WeeklyCertification;
 import com.nabeelsayyed.benefitsportal.service.AuditService;
 import com.nabeelsayyed.benefitsportal.service.CertificationService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
+import com.nabeelsayyed.benefitsportal.service.DocumentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -28,12 +30,14 @@ public class ClaimApiController {
     private final ClaimService claimService;
     private final AuditService auditService;
     private final CertificationService certificationService;
+    private final DocumentService documentService;
 
     public ClaimApiController(ClaimService claimService, AuditService auditService,
-                              CertificationService certificationService) {
+                              CertificationService certificationService, DocumentService documentService) {
         this.claimService = claimService;
         this.auditService = auditService;
         this.certificationService = certificationService;
+        this.documentService = documentService;
     }
 
     @PostMapping
@@ -69,6 +73,13 @@ public class ClaimApiController {
     public List<Payment> payments(@PathVariable Long id) {
         claimService.findById(id);
         return certificationService.paymentsFor(id);
+    }
+
+    /** Information about the claim's uploaded documents (not the files themselves). */
+    @GetMapping("/{id}/documents")
+    public List<ClaimDocument> documents(@PathVariable Long id) {
+        claimService.findById(id);
+        return documentService.documentsFor(id);
     }
 
     @PatchMapping("/{id}/status")

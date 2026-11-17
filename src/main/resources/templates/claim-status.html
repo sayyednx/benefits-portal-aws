@@ -110,6 +110,27 @@
     </section>
 
     <section class="card">
+        <h2>Documents</h2>
+        <p class="muted">Upload proof that helps us decide your claim, like a pay stub or a layoff letter.
+            PDF, PNG or JPEG, up to 5 MB each.</p>
+        <ul class="doc-list" th:unless="${documents.isEmpty()}">
+            <li th:each="d : ${documents}">
+                <strong th:text="${d.type.label}"></strong>: <span th:text="${d.originalFilename}"></span>
+                <span class="muted" th:text="'(' + ${#temporals.format(d.uploadedAt, 'MMM d, yyyy')} + ')'"></span>
+            </li>
+        </ul>
+        <form th:action="@{/status/documents}" method="post" enctype="multipart/form-data" class="stack">
+            <label for="type">What is it?</label>
+            <select id="type" name="type">
+                <option th:each="t : ${documentTypes}" th:value="${t}" th:text="${t.label}"></option>
+            </select>
+            <label for="file">File</label>
+            <input type="file" id="file" name="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" required>
+            <button type="submit" class="btn-secondary">Upload</button>
+        </form>
+    </section>
+
+    <section class="card">
         <h2>What has happened so far</h2>
         <ol class="timeline">
             <li th:each="e : ${history}">

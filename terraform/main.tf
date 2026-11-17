@@ -97,21 +97,108 @@ resource "aws_db_subnet_group" "default" {
 }
 
 resource "aws_db_instance" "mysql" {
-  identifier             = "${var.app_name}-db"
-  engine                 = "mysql"
-  engine_version         = "8.0"
-  instance_class         = var.db_instance_class
-  allocated_storage      = 20
-  db_name                = var.db_name
-  username               = var.db_username
-  password               = var.db_password
-  db_subnet_group_name   = aws_db_subnet_group.default.name
-  vpc_security_group_ids = [aws_security_group.db.id]
-  publicly_accessible    = false
-  skip_final_snapshot    = true
+  identifier              = "${var.app_name}-db"
+  engine                  = "mysql"
+  engine_version          = "8.0"
+  instance_class          = var.db_instance_class
+  allocated_storage       = 20
+  db_name                 = var.db_name
+  username                = var.db_username
+  password                = var.db_password
+  db_subnet_group_name    = aws_db_subnet_group.default.name
+  vpc_security_group_ids  = [aws_security_group.db.id]
+  publicly_accessible     = false
+  skip_final_snapshot     = true
   backup_retention_period = 0
 
   tags = { Name = "${var.app_name}-db" }
+}
+
+# --- Document storage (S3) ---
+# Claimants upload proof like pay stubs and layoff letters. These hold personal
+# information, so the bucket is locked down: no public access at all, encrypted at
+# rest, and versioned so an overwritten or deleted file can be recovered.
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket" "documents" {
+  # Bucket names are global across all of AWS, so the account id keeps this one unique.
+  bucket = "${var.app_name}-documents-${data.aws_caller_identity.current.account_id}"
+
+  # Lets `terraform destroy` remove the bucket even with files in it. Fine for a demo;
+  # a real benefits program would keep these records for years instead.
+  force_destroy = true
+
+  tags = { Name = "${var.app_name}-documents" }
+}
+
+resource "aws_s3_bucket_public_access_block" "documents" {
+  bucket                  = aws_s3_bucket.documents.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
+resource "aws_s3_bucket_ownership_controls" "documents" {
+  bucket = aws_s3_bucket.documents.id
+  rule {
+    object_ownership = "BucketOwnerEnforced"
+  }
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "documents" {
+  bucket = aws_s3_bucket.documents.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+resource "aws_s3_bucket_versioning" "documents" {
+  bucket = aws_s3_bucket.documents.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# --- IAM: what the app server is allowed to do in AWS ---
+# The EC2 instance gets a role instead of access keys. AWS hands the app short-lived
+# credentials automatically, so there are no long-lived secrets to leak. The policy
+# allows only reading and writing files in this one bucket ("least privilege").
+
+data "aws_iam_policy_document" "ec2_assume" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "app" {
+  name               = "${var.app_name}-app-role"
+  assume_role_policy = data.aws_iam_policy_document.ec2_assume.json
+}
+
+data "aws_iam_policy_document" "documents_access" {
+  statement {
+    actions   = ["s3:PutObject", "s3:GetObject"]
+    resources = ["${aws_s3_bucket.documents.arn}/*"]
+  }
+}
+
+resource "aws_iam_role_policy" "documents_access" {
+  name   = "documents-read-write"
+  role   = aws_iam_role.app.id
+  policy = data.aws_iam_policy_document.documents_access.json
+}
+
+resource "aws_iam_instance_profile" "app" {
+  name = "${var.app_name}-app-profile"
+  role = aws_iam_role.app.name
 }
 
 # --- App server ---
@@ -124,6 +211,14 @@ resource "aws_instance" "app" {
   instance_type          = var.instance_type
   subnet_id              = data.aws_subnets.default.ids[0]
   vpc_security_group_ids = [aws_security_group.app.id]
+  iam_instance_profile   = aws_iam_instance_profile.app.name
+
+  # IMDSv2 only (the safer version of the instance metadata service). The hop limit of 2
+  # lets the app inside its Docker container still reach it to get the role's credentials.
+  metadata_options {
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 2
+  }
 
   user_data = templatefile("${path.module}/user_data.sh.tpl", {
     db_endpoint    = aws_db_instance.mysql.address
@@ -132,6 +227,8 @@ resource "aws_instance" "app" {
     db_password    = var.db_password
     admin_password = var.admin_password
     app_repo_url   = var.app_repo_url
+    aws_region     = var.aws_region
+    docs_bucket    = aws_s3_bucket.documents.bucket
   })
 
   tags = { Name = "${var.app_name}-app" }

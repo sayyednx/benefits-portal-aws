@@ -99,3 +99,4 @@ fieldset label { margin-right: 16px; }
 fieldset label { font-weight: normal; }
 .spaced { margin-top: 24px; }
 .narrow-form { max-width: 420px; }
+.doc-list { padding-left: 18px; }

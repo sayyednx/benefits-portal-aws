@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockHttpSession;
+import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -24,6 +26,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -38,6 +41,9 @@ class ClaimantFlowTest {
 
     @Autowired
     private ClaimService claimService;
+
+    @Autowired
+    private com.nabeelsayyed.benefitsportal.service.DocumentService documentService;
 
     private Claim fileClaim(String email) {
         ClaimRequest request = new ClaimRequest();
@@ -134,5 +140,41 @@ class ClaimantFlowTest {
         assertThat(claimService.findById(claim.getId()).getStatus()).isEqualTo(ClaimStatus.APPEALED);
         mvc.perform(get("/status/claim").session(session))
                 .andExpect(content().string(not(containsString("Appeal this decision"))));
+    }
+
+    @Test
+    void aClaimantCanUploadAndStaffCanDownload() throws Exception {
+        Claim claim = fileClaim("morgan@example.com");
+        MockHttpSession session = verify(claim, "morgan@example.com");
+        byte[] pdf = "%PDF-1.4 test".getBytes();
+
+        mvc.perform(multipart("/status/documents").file(new MockMultipartFile("file", "stub.pdf", "application/pdf", pdf))
+                        .param("type", "PAY_STUB").session(session).with(csrf()))
+                .andExpect(redirectedUrl("/status/claim"))
+                .andExpect(flash().attribute("message", containsString("stub.pdf")));
+
+        mvc.perform(get("/status/claim").session(session))
+                .andExpect(content().string(containsString("stub.pdf")));
+    }
+
+    @Test
+    @WithMockUser(roles = "CASEWORKER")
+    void staffDownloadsComeBackAsAnAttachment() throws Exception {
+        Claim claim = fileClaim("ari@example.com");
+        var doc = documentService.upload(claim.getId(), com.nabeelsayyed.benefitsportal.model.DocumentType.PAY_STUB,
+                new MockMultipartFile("file", "stub.pdf", "application/pdf", "%PDF-1.4 test".getBytes()));
+
+        mvc.perform(get("/admin/claims/" + claim.getId() + "/documents/" + doc.getId()))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", "application/pdf"))
+                .andExpect(header().string("Content-Disposition", containsString("attachment")))
+                .andExpect(header().string("X-Content-Type-Options", "nosniff"));
+    }
+
+    @Test
+    void theDownloadLinkIsStaffOnly() throws Exception {
+        Claim claim = fileClaim("kai@example.com");
+        mvc.perform(get("/admin/claims/" + claim.getId() + "/documents/1"))
+                .andExpect(status().is3xxRedirection());
     }
 }

@@ -4,6 +4,9 @@ target/
 *.jar
 !.mvn/wrapper/maven-wrapper.jar
 
+# Uploaded documents in local development
+uploads/
+
 # IDE
 .idea/
 *.iws

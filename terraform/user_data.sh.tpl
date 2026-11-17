@@ -21,4 +21,7 @@ docker run -d \
   -e SPRING_DATASOURCE_PASSWORD="${db_password}" \
   -e ADMIN_USERNAME="admin" \
   -e ADMIN_PASSWORD="${admin_password}" \
+  -e DOCUMENTS_STORAGE="s3" \
+  -e DOCUMENTS_S3_BUCKET="${docs_bucket}" \
+  -e DOCUMENTS_S3_REGION="${aws_region}" \
   benefits-portal-aws

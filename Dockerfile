@@ -15,7 +15,8 @@ WORKDIR /app
 
 RUN addgroup -S app && adduser -S app -G app
 COPY --from=build /build/target/benefits-portal-aws.jar app.jar
-RUN chown app:app app.jar
+# Folder for uploaded documents when DOCUMENTS_STORAGE=local (docker compose mounts a volume here)
+RUN mkdir -p /app/uploads && chown app:app app.jar /app/uploads
 USER app
 
 EXPOSE 8080

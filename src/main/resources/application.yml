@@ -15,6 +15,11 @@ spring:
         dialect: org.hibernate.dialect.MySQLDialect
   thymeleaf:
     cache: false
+  servlet:
+    multipart:
+      # A little above documents.max-bytes, so DocumentService gives the friendly message.
+      max-file-size: 6MB
+      max-request-size: 7MB
 
 server:
   port: ${SERVER_PORT:8080}
@@ -31,6 +36,16 @@ benefits:
   min-job-contacts: ${BENEFITS_MIN_JOB_CONTACTS:3}
   earnings-disregard-rate: ${BENEFITS_EARNINGS_DISREGARD_RATE:0.25}
   waiting-week: ${BENEFITS_WAITING_WEEK:true}
+
+# Uploaded documents. "local" keeps files in a folder (for docker compose);
+# "s3" keeps them in an S3 bucket (Terraform sets this on the EC2 instance).
+documents:
+  storage: ${DOCUMENTS_STORAGE:local}
+  local-dir: ${DOCUMENTS_LOCAL_DIR:uploads}
+  max-bytes: 5242880
+  s3:
+    bucket: ${DOCUMENTS_S3_BUCKET:}
+    region: ${DOCUMENTS_S3_REGION:us-east-1}
 
 # There is deliberately no default password: the app refuses to start until
 # ADMIN_PASSWORD is set (see SecurityConfig).

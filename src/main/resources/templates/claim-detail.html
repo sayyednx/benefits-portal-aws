@@ -31,6 +31,20 @@
     <p class="flash flash-ok" th:if="${message}" th:text="${message}" role="status"></p>
     <p class="flash flash-error" th:if="${error}" th:text="${error}" role="alert"></p>
 
+    <section class="card">
+        <h2>Documents</h2>
+        <p th:if="${documents.isEmpty()}" class="muted">The claimant hasn't uploaded any documents.</p>
+        <ul class="doc-list" th:unless="${documents.isEmpty()}">
+            <li th:each="d : ${documents}">
+                <strong th:text="${d.type.label}"></strong>:
+                <a th:href="@{/admin/claims/{id}/documents/{doc}(id=${claim.id},doc=${d.id})}"
+                   th:text="${d.originalFilename}"></a>
+                <span class="muted"
+                      th:text="${#numbers.formatDecimal(d.sizeBytes / 1024.0, 1, 0)} + ' KB, ' + ${#temporals.format(d.uploadedAt, 'MMM d, yyyy')}"></span>
+            </li>
+        </ul>
+    </section>
+
     <section class="card" th:if="${claim.appealedAt != null}">
         <h2>Appeal</h2>
         <p class="muted" th:text="'Filed ' + ${#temporals.format(claim.appealedAt, 'MMM d, yyyy h:mm a')}"></p>

@@ -32,6 +32,12 @@ services:
       ADMIN_USERNAME: admin
       # Read from .env (copy .env.example). Compose stops with this message if it's missing.
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Set ADMIN_PASSWORD in .env (copy .env.example to .env)}
+      # Locally, uploaded documents go in a Docker volume. In AWS they go to S3 instead.
+      DOCUMENTS_STORAGE: local
+      DOCUMENTS_LOCAL_DIR: /app/uploads
+    volumes:
+      - uploads_data:/app/uploads
 
 volumes:
   mysql_data:
+  uploads_data:
