@@ -51,8 +51,8 @@
     <section class="card" th:if="${claim.status.name() == 'APPROVED'}">
         <h2>Weekly certification</h2>
         <dl class="summary">
-            <dt>Paid so far</dt><dd th:text="'$' + ${totalPaid}"></dd>
-            <dt>Left on this claim</dt><dd th:text="'$' + ${remainingBalance}"></dd>
+            <dt>Paid so far</dt><dd th:text="'$' + ${#numbers.formatDecimal(totalPaid, 1, 'COMMA', 2, 'POINT')}"></dd>
+            <dt>Left on this claim</dt><dd th:text="'$' + ${#numbers.formatDecimal(remainingBalance, 1, 'COMMA', 2, 'POINT')}"></dd>
         </dl>
 
         <div th:if="${weeksDue.isEmpty()}">

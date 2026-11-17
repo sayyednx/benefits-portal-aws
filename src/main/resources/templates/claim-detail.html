@@ -85,17 +85,16 @@
             <input type="text" name="reviewerNotes" placeholder="Notes (required to deny)" aria-label="Notes" class="wide">
             <button type="submit" class="btn-small">Save</button>
         </form>
-        <p th:if="${claim.status.finalForStaff}" class="muted">
-            No staff action is left on this claim. A denied claim can only move again if the claimant appeals.
-        </p>
+        <p th:if="${claim.status.finalForStaff}" class="muted"
+           th:text="${claim.status.name() == 'DENIED'} ? 'No staff action is left. This claim can only move again if the claimant appeals.' : 'No staff action is left on this claim.'"></p>
     </section>
 
     <section class="card" th:if="${claim.status.name() == 'APPROVED' or !certifications.isEmpty()}">
         <h2>Weekly certifications and payments</h2>
         <dl class="summary">
-            <dt>Maximum benefit</dt><dd th:text="'$' + ${maximumBenefit}"></dd>
-            <dt>Paid so far</dt><dd th:text="'$' + ${totalPaid}"></dd>
-            <dt>Remaining</dt><dd th:text="'$' + ${remainingBalance}"></dd>
+            <dt>Maximum benefit</dt><dd th:text="'$' + ${#numbers.formatDecimal(maximumBenefit, 1, 'COMMA', 2, 'POINT')}"></dd>
+            <dt>Paid so far</dt><dd th:text="'$' + ${#numbers.formatDecimal(totalPaid, 1, 'COMMA', 2, 'POINT')}"></dd>
+            <dt>Remaining</dt><dd th:text="'$' + ${#numbers.formatDecimal(remainingBalance, 1, 'COMMA', 2, 'POINT')}"></dd>
         </dl>
         <table class="claims-table" th:unless="${certifications.isEmpty()}">
             <thead><tr><th>Week ending</th><th>Able &amp; available</th><th>Refused work</th>
@@ -122,7 +121,7 @@
             <li th:each="e : ${history}">
                 <div>
                     <strong th:text="${e.type}"></strong>
-                    <span th:if="${e.fromStatus != null or e.toStatus != null}"
+                    <span th:if="${e.fromStatus != null}"
                           th:text="${(e.fromStatus ?: '—') + ' → ' + (e.toStatus ?: '—')}"></span>
                 </div>
                 <div class="muted">

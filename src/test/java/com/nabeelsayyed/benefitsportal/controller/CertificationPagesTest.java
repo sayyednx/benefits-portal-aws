@@ -110,6 +110,6 @@ class CertificationPagesTest {
         mvc.perform(get("/admin/claims/" + claim.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Weekly certifications and payments")))
-                .andExpect(content().string(containsString("$7800.00")));
+                .andExpect(content().string(containsString("$7,800.00")));
     }
 }
