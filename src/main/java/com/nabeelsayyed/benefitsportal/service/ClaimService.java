@@ -19,6 +19,7 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -27,6 +28,7 @@ public class ClaimService {
     private final ClaimRepository claimRepository;
     private final AuditService auditService;
     private final CurrentActor currentActor;
+    private final ConfirmationNumberGenerator confirmationNumbers;
     private final Clock clock;
 
     /**
@@ -63,10 +65,12 @@ public class ClaimService {
     );
 
     public ClaimService(ClaimRepository claimRepository, AuditService auditService,
-                        CurrentActor currentActor, Clock clock) {
+                        CurrentActor currentActor, ConfirmationNumberGenerator confirmationNumbers,
+                        Clock clock) {
         this.claimRepository = claimRepository;
         this.auditService = auditService;
         this.currentActor = currentActor;
+        this.confirmationNumbers = confirmationNumbers;
         this.clock = clock;
     }
 
@@ -86,12 +90,36 @@ public class ClaimService {
         claim.setEligible(eligible);
         claim.setWeeklyBenefitAmount(eligible ? calculateWeeklyBenefit(claim.getAverageWeeklyWage()) : BigDecimal.ZERO);
         claim.setStatus(ClaimStatus.FILED);
+        claim.setConfirmationNumber(newConfirmationNumber());
 
         Claim saved = claimRepository.save(claim);
         auditService.record(saved.getId(), ClaimEventType.FILED, null, ClaimStatus.FILED,
                 eligible ? "Weekly benefit calculated: $" + saved.getWeeklyBenefitAmount()
                          : "Not monetarily eligible: " + saved.getSeparationReason());
         return saved;
+    }
+
+    private String newConfirmationNumber() {
+        // About a trillion possible numbers, so a clash is very unlikely, but check anyway.
+        String number;
+        do {
+            number = confirmationNumbers.next();
+        } while (claimRepository.existsByConfirmationNumber(number));
+        return number;
+    }
+
+    /**
+     * Finds a claim for the "check my claim" page. Both the confirmation number and the
+     * email must match. When either is wrong the result is simply empty, so the page can't
+     * be used to find out which emails have claims.
+     */
+    @Transactional(readOnly = true)
+    public Optional<Claim> lookup(String confirmationNumber, String email) {
+        if (email == null || email.isBlank()) {
+            return Optional.empty();
+        }
+        return claimRepository.findByConfirmationNumber(ConfirmationNumberGenerator.normalize(confirmationNumber))
+                .filter(claim -> claim.getClaimantEmail().equalsIgnoreCase(email.trim()));
     }
 
     /**

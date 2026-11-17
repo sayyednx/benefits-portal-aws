@@ -2,19 +2,22 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Claim Submitted — Benefits Portal</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<header class="site-header">
-    <div class="wrap">
-        <span class="brand">Benefits Portal</span>
-        <nav><a th:href="@{/admin/claims}">Admin</a></nav>
-    </div>
-</header>
+<header th:replace="~{fragments :: publicHeader}"></header>
 
 <main class="wrap narrow">
-    <h1>Claim #<span th:text="${claim.id}"></span> filed</h1>
+    <h1>Your claim is filed</h1>
+
+    <div class="card confirmation-box">
+        <p class="muted">Your confirmation number</p>
+        <p class="confirmation-number" th:text="${claim.confirmationNumber}"></p>
+        <p>Write this down. You'll need it, with your email, to <a th:href="@{/status}">check your claim</a>,
+            file weekly certifications, and upload documents.</p>
+    </div>
 
     <div class="card" th:if="${claim.eligible}">
         <p class="status-pill status-approved" th:text="'Weekly benefit: $' + ${claim.weeklyBenefitAmount}"></p>

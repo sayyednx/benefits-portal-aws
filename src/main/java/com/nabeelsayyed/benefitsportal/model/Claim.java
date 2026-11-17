@@ -16,6 +16,14 @@ public class Claim {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /**
+     * The random number the claimant uses to check on their claim (see
+     * ConfirmationNumberGenerator). Nullable only so claims filed before this column
+     * existed still load.
+     */
+    @Column(unique = true, length = 20)
+    private String confirmationNumber;
+
     @Column(nullable = false)
     private String claimantName;
 
@@ -93,6 +101,14 @@ public class Claim {
 
     public Long getId() {
         return id;
+    }
+
+    public String getConfirmationNumber() {
+        return confirmationNumber;
+    }
+
+    public void setConfirmationNumber(String confirmationNumber) {
+        this.confirmationNumber = confirmationNumber;
     }
 
     public String getClaimantName() {

@@ -48,7 +48,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/claims/**", "/css/**", "/error").permitAll()
+                        .requestMatchers("/", "/claims/**", "/status", "/status/**", "/css/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/claims").permitAll() // public claim submission only
                         .requestMatchers("/api/**").hasRole("ADMIN") // listing, lookup, and decisions are admin-only
                         .requestMatchers("/admin/**").hasRole("ADMIN")

@@ -2,18 +2,12 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title th:text="'Claim ' + ${claim.id} + ' — Benefits Portal'">Claim — Benefits Portal</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<header class="site-header">
-    <div class="wrap">
-        <span class="brand">Benefits Portal — Admin</span>
-        <form th:action="@{/admin/logout}" method="post" class="logout-form">
-            <button type="submit" class="link-btn">Log out</button>
-        </form>
-    </div>
-</header>
+<header th:replace="~{fragments :: staffHeader}"></header>
 
 <main class="wrap">
     <p><a th:href="@{/admin/claims}">&larr; Back to the claims queue</a></p>

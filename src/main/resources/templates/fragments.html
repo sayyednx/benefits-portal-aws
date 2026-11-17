@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Header for public (claimant) pages -->
+<header th:fragment="publicHeader" class="site-header">
+    <div class="wrap">
+        <a th:href="@{/}" class="brand">Benefits Portal</a>
+        <nav>
+            <a th:href="@{/}">File a claim</a>
+            <a th:href="@{/status}">Check my claim</a>
+            <a th:href="@{/admin/claims}">Staff login</a>
+        </nav>
+    </div>
+</header>
+
+<!-- Header for staff pages -->
+<header th:fragment="staffHeader" class="site-header">
+    <div class="wrap">
+        <a th:href="@{/admin/claims}" class="brand">Benefits Portal — Staff</a>
+        <nav>
+            <a th:href="@{/admin/claims}">Claims queue</a>
+            <form th:action="@{/admin/logout}" method="post" class="logout-form">
+                <button type="submit" class="link-btn">Log out</button>
+            </form>
+        </nav>
+    </div>
+</header>
+
+</body>
+</html>

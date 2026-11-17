@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My Claim — Benefits Portal</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<header th:replace="~{fragments :: publicHeader}"></header>
+
+<main class="wrap narrow">
+    <div class="title-row">
+        <h1>My claim</h1>
+        <form th:action="@{/status/signout}" method="post">
+            <button type="submit" class="link-btn">Sign out</button>
+        </form>
+    </div>
+
+    <p class="flash flash-ok" th:if="${message}" th:text="${message}" role="status"></p>
+    <p class="flash flash-error" th:if="${error}" th:text="${error}" role="alert"></p>
+
+    <section class="card">
+        <span class="status-pill" th:text="${claim.status}"
+              th:classappend="'status-' + ${#strings.toLowerCase(claim.status)}"></span>
+        <p th:text="${claim.status.description}"></p>
+        <dl class="summary">
+            <dt>Confirmation number</dt><dd th:text="${claim.confirmationNumber}"></dd>
+            <dt>Filed</dt><dd th:text="${#temporals.format(claim.filedAt, 'MMM d, yyyy')}"></dd>
+            <dt>Employer</dt><dd th:text="${claim.employerName}"></dd>
+            <dt>Weekly benefit</dt><dd th:text="'$' + ${claim.weeklyBenefitAmount}"></dd>
+        </dl>
+    </section>
+
+    <section class="card" th:if="${claim.status.name() == 'DENIED' and claim.reviewerNotes != null}">
+        <h2>Why your claim was denied</h2>
+        <p th:text="${claim.reviewerNotes}"></p>
+    </section>
+
+    <section class="card" th:if="${canAppeal}">
+        <h2>Appeal this decision</h2>
+        <p>If you think the decision is wrong, tell us why. You can appeal once, until
+            <strong th:text="${#temporals.format(appealDeadline, 'MMMM d, yyyy')}"></strong>.</p>
+        <form th:action="@{/status/appeal}" method="post" class="stack">
+            <label for="reason">Why is the decision wrong?</label>
+            <textarea id="reason" name="reason" rows="4" maxlength="2000" required></textarea>
+            <button type="submit" class="btn-primary">File appeal</button>
+        </form>
+    </section>
+
+    <section class="card">
+        <h2>What has happened so far</h2>
+        <ol class="timeline">
+            <li th:each="e : ${history}">
+                <strong th:text="${e.toStatus ?: e.type}"></strong>
+                <div class="muted" th:text="${#temporals.format(e.occurredAt, 'MMM d, yyyy')}"></div>
+            </li>
+        </ol>
+    </section>
+</main>
+</body>
+</html>

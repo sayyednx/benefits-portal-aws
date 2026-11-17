@@ -2,17 +2,14 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Login — Benefits Portal</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Staff Login — Benefits Portal</title>
     <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-<header class="site-header">
-    <div class="wrap">
-        <span class="brand">Benefits Portal</span>
-    </div>
-</header>
+<header th:replace="~{fragments :: publicHeader}"></header>
 <main class="wrap narrow">
-    <h1>Admin login</h1>
+    <h1>Staff login</h1>
     <form th:action="@{/admin/login}" method="post" class="form">
         <div class="field">
             <label for="username">Username</label>
