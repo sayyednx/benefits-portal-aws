@@ -20,6 +20,11 @@ spring:
       # A little above documents.max-bytes, so DocumentService gives the friendly message.
       max-file-size: 6MB
       max-request-size: 7MB
+  # Where emails go when notifications.sender is "smtp". Locally that is Mailpit,
+  # a pretend inbox that catches every email (see docker-compose.yml).
+  mail:
+    host: ${MAIL_HOST:localhost}
+    port: ${MAIL_PORT:1025}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -50,6 +55,16 @@ documents:
   s3:
     bucket: ${DOCUMENTS_S3_BUCKET:}
     region: ${DOCUMENTS_S3_REGION:us-east-1}
+
+# Emails to claimants (see NotificationService). "smtp" sends to the mail server above
+# (Mailpit locally); "ses" sends through Amazon SES (Terraform sets this on AWS).
+notifications:
+  enabled: ${NOTIFICATIONS_ENABLED:true}
+  sender: ${NOTIFICATIONS_SENDER:smtp}
+  from: ${NOTIFICATIONS_FROM:benefits-portal@example.com}
+  # The site address used for links inside emails.
+  base-url: ${NOTIFICATIONS_BASE_URL:http://localhost:8080}
+  ses-region: ${NOTIFICATIONS_SES_REGION:us-east-1}
 
 # There is deliberately no default password: the app refuses to start until
 # ADMIN_PASSWORD is set (see SecurityConfig).

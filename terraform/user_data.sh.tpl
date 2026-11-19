@@ -12,6 +12,10 @@ cd /opt/app
 
 docker build -t benefits-portal-aws .
 
+# The instance's public address, so links in emails point back to this server.
+TOKEN=$(curl -sX PUT http://169.254.169.254/latest/api/token -H "X-aws-ec2-metadata-token-ttl-seconds: 60")
+PUBLIC_IP=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/latest/meta-data/public-ipv4)
+
 docker run -d \
   --name benefits-portal-aws \
   --restart unless-stopped \
@@ -24,4 +28,9 @@ docker run -d \
   -e DOCUMENTS_STORAGE="s3" \
   -e DOCUMENTS_S3_BUCKET="${docs_bucket}" \
   -e DOCUMENTS_S3_REGION="${aws_region}" \
+  -e NOTIFICATIONS_ENABLED="${email_enabled}" \
+  -e NOTIFICATIONS_SENDER="ses" \
+  -e NOTIFICATIONS_FROM="${email_from}" \
+  -e NOTIFICATIONS_SES_REGION="${aws_region}" \
+  -e NOTIFICATIONS_BASE_URL="http://$PUBLIC_IP:8080" \
   benefits-portal-aws

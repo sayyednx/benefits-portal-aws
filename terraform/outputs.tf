@@ -12,3 +12,8 @@ output "documents_bucket" {
   description = "Private S3 bucket that holds claimants' uploaded documents."
   value       = aws_s3_bucket.documents.bucket
 }
+
+output "notification_sender" {
+  description = "The address claimant emails come from. Check its inbox for the AWS verification link."
+  value       = var.notification_from_email == "" ? "Emails are off (notification_from_email is empty)" : var.notification_from_email
+}

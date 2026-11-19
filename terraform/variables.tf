@@ -50,3 +50,9 @@ variable "app_repo_url" {
   type        = string
   default     = "https://github.com/sayyednx/benefits-portal-aws.git"
 }
+
+variable "notification_from_email" {
+  description = "Address the portal sends claimant emails from, through Amazon SES. AWS emails it a link to click before it can send. Leave empty to turn emails off."
+  type        = string
+  default     = ""
+}

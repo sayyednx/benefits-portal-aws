@@ -8,8 +8,10 @@ import com.nabeelsayyed.benefitsportal.model.Claim;
 import com.nabeelsayyed.benefitsportal.model.ClaimEventType;
 import com.nabeelsayyed.benefitsportal.model.ClaimStatus;
 import com.nabeelsayyed.benefitsportal.model.SeparationReason;
+import com.nabeelsayyed.benefitsportal.notification.ClaimNotificationEvent;
 import com.nabeelsayyed.benefitsportal.repository.ClaimRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +34,7 @@ public class ClaimService {
     private final ConfirmationNumberGenerator confirmationNumbers;
     private final FraudCheckService fraudCheckService;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     /**
      * The percentage of average weekly wage paid out as a benefit. Real state systems
@@ -68,13 +71,15 @@ public class ClaimService {
 
     public ClaimService(ClaimRepository claimRepository, AuditService auditService,
                         CurrentActor currentActor, ConfirmationNumberGenerator confirmationNumbers,
-                        FraudCheckService fraudCheckService, Clock clock) {
+                        FraudCheckService fraudCheckService, Clock clock,
+                        ApplicationEventPublisher events) {
         this.claimRepository = claimRepository;
         this.auditService = auditService;
         this.currentActor = currentActor;
         this.confirmationNumbers = confirmationNumbers;
         this.fraudCheckService = fraudCheckService;
         this.clock = clock;
+        this.events = events;
     }
 
     @Transactional
@@ -100,6 +105,7 @@ public class ClaimService {
                 eligible ? "Weekly benefit calculated: $" + saved.getWeeklyBenefitAmount()
                          : "Not monetarily eligible: " + saved.getSeparationReason());
         fraudCheckService.check(saved);
+        events.publishEvent(new ClaimNotificationEvent(saved.getId(), ClaimNotificationEvent.Kind.CLAIM_FILED, null));
         return saved;
     }
 
@@ -241,6 +247,7 @@ public class ClaimService {
         claim.setReviewedBy(currentActor.name());
         Claim saved = claimRepository.save(claim);
         auditService.record(saved.getId(), ClaimEventType.STATUS_CHANGED, from, to, details);
+        events.publishEvent(new ClaimNotificationEvent(saved.getId(), ClaimNotificationEvent.Kind.DECISION_MADE, null));
         return saved;
     }
 
@@ -288,6 +295,7 @@ public class ClaimService {
         Claim saved = claimRepository.save(claim);
         auditService.record(saved.getId(), ClaimEventType.APPEAL_FILED,
                 ClaimStatus.DENIED, ClaimStatus.APPEALED, reason.trim());
+        events.publishEvent(new ClaimNotificationEvent(saved.getId(), ClaimNotificationEvent.Kind.APPEAL_RECEIVED, null));
         return saved;
     }
 }

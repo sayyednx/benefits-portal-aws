@@ -61,6 +61,16 @@
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
 
+        <!-- Emails to claimants: SMTP locally (Mailpit), Amazon SES on AWS -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>sesv2</artifactId>
+        </dependency>
+
         <!-- Uploaded documents go to Amazon S3 in AWS (see storage/S3DocumentStorage) -->
         <dependency>
             <groupId>software.amazon.awssdk</groupId>

@@ -17,12 +17,22 @@ services:
       timeout: 5s
       retries: 10
 
+  # A pretend email inbox. It catches every email the app sends, so nothing reaches a
+  # real person. Open http://localhost:8025 to read them.
+  mailpit:
+    image: axllent/mailpit:v1.21.8
+    restart: unless-stopped
+    ports:
+      - "8025:8025"
+
   app:
     build: .
     restart: unless-stopped
     depends_on:
       mysql:
         condition: service_healthy
+      mailpit:
+        condition: service_started
     ports:
       - "8080:8080"
     environment:
@@ -35,6 +45,11 @@ services:
       # Locally, uploaded documents go in a Docker volume. In AWS they go to S3 instead.
       DOCUMENTS_STORAGE: local
       DOCUMENTS_LOCAL_DIR: /app/uploads
+      # Emails go to Mailpit locally. In AWS they go through Amazon SES instead.
+      NOTIFICATIONS_SENDER: smtp
+      MAIL_HOST: mailpit
+      MAIL_PORT: 1025
+      NOTIFICATIONS_BASE_URL: http://localhost:8080
     volumes:
       - uploads_data:/app/uploads
 

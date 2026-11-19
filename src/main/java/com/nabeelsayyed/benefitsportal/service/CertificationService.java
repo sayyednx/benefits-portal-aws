@@ -3,9 +3,11 @@ package com.nabeelsayyed.benefitsportal.service;
 import com.nabeelsayyed.benefitsportal.dto.CertificationRequest;
 import com.nabeelsayyed.benefitsportal.exception.InvalidClaimActionException;
 import com.nabeelsayyed.benefitsportal.model.*;
+import com.nabeelsayyed.benefitsportal.notification.ClaimNotificationEvent;
 import com.nabeelsayyed.benefitsportal.repository.PaymentRepository;
 import com.nabeelsayyed.benefitsportal.repository.WeeklyCertificationRepository;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +16,7 @@ import java.time.Clock;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +37,7 @@ public class CertificationService {
     private final PaymentCalculator calculator;
     private final AuditService auditService;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     /** How many weeks of full benefits one claim can pay in total. 26 is the most common. */
     @Value("${benefits.max-weeks:26}")
@@ -41,13 +45,15 @@ public class CertificationService {
 
     public CertificationService(ClaimService claimService, WeeklyCertificationRepository certificationRepository,
                                 PaymentRepository paymentRepository, PaymentCalculator calculator,
-                                AuditService auditService, Clock clock) {
+                                AuditService auditService, Clock clock,
+                                ApplicationEventPublisher events) {
         this.claimService = claimService;
         this.certificationRepository = certificationRepository;
         this.paymentRepository = paymentRepository;
         this.calculator = calculator;
         this.auditService = auditService;
         this.clock = clock;
+        this.events = events;
     }
 
     public int getMaxWeeks() {
@@ -138,6 +144,9 @@ public class CertificationService {
             paymentRepository.save(new Payment(claimId, certification.getId(), week, result.amount(), now));
             auditService.recordAs("system", claimId, ClaimEventType.PAYMENT_ISSUED, null, null,
                     "$" + result.amount() + " for the week ending " + week);
+            events.publishEvent(new ClaimNotificationEvent(claimId, ClaimNotificationEvent.Kind.PAYMENT_SENT,
+                    "$" + result.amount() + " for the week ending "
+                            + week.format(DateTimeFormatter.ofPattern("MMMM d, yyyy"))));
         }
         return certification;
     }

@@ -33,6 +33,9 @@ It follows a claim the way a state unemployment office does, from filing to week
   how many employers contacted? any earnings? Each week is then paid, partly paid, or not
   paid, following common state rules (see below).
 - **Upload proof** such as pay stubs, layoff letters, or ID (PDF, PNG, JPEG up to 5 MB).
+- **Get emails** at each step: claim received (with the confirmation number), approved or
+  denied (with the reason and appeal deadline), appeal received, and each payment sent.
+  Every email has an HTML version and a plain-text version.
 
 **For staff**
 
@@ -84,7 +87,9 @@ both:
   Claimant ────▶ │   Spring Boot app   │      docker-compose locally)
   Staff    ────▶ │  (Thymeleaf + REST) │
                  └────────────────────┘ ──▶ Uploaded documents (S3 in prod,
-                                              a Docker volume locally)
+                          │                    a Docker volume locally)
+                          └──────────────▶ Claimant emails (Amazon SES in prod,
+                                              a Mailpit test inbox locally)
                           │
                  Docker image, built by
                  GitHub Actions CI on every push
@@ -92,14 +97,15 @@ both:
                           ▼
               Terraform provisions: EC2 (runs the
               container) + RDS MySQL + a private S3
-              bucket + an IAM role + security groups,
+              bucket + an SES sender + an IAM role +
+              security groups,
               inside the AWS account's default VPC
 ```
 
 ## Tech stack
 
 Java 21 · Spring Boot 3 (Web, Data JPA, Security, Thymeleaf, Validation) · MySQL 8 ·
-AWS SDK for Java v2 (S3) · Docker · Terraform (AWS provider) · GitHub Actions
+AWS SDK for Java v2 (S3, SES) · Spring Mail · Mailpit · Docker · Terraform (AWS provider) · GitHub Actions
 
 ## Running it locally
 
@@ -118,6 +124,8 @@ Then open:
 - `http://localhost:8080/status` — check a claim with its confirmation number and email
 - `http://localhost:8080/admin/claims` — staff queue (log in as `admin` with the
   password you put in `.env`)
+- `http://localhost:8025/` — **Mailpit**, a pretend inbox that catches every email the
+  app sends. Nothing reaches a real person, so you can file claims with any email address.
 
 On the first start, the app creates one **supervisor** account from `ADMIN_USERNAME` /
 `ADMIN_PASSWORD`. Log in with it and add caseworkers from the **Staff** page. There is no
@@ -136,7 +144,7 @@ mvn test
 ```
 
 Tests run against an in-memory H2 database (see `src/test/resources/application-test.yml`),
-so they don't need MySQL or Docker running. There are 87 tests. They cover the
+so they don't need MySQL or Docker running. There are 95 tests. They cover the
 rules, not just "does it start":
 
 - `ClaimServiceTest`, `PaymentCalculatorTest`: eligibility, benefit amount, and each weekly
@@ -146,6 +154,8 @@ rules, not just "does it start":
   (`MutableClock`), so date rules are tested without waiting for real days.
 - `FraudCheckServiceTest`, `DocumentServiceTest`, `AuditHistoryTest`: flags, upload
   safety (file type from magic bytes, size limits, path tricks), and history.
+- `NotificationFlowTest`, `SesEmailSenderTest`: the right email at each step of a claim,
+  that a broken mail server never stops a claim being saved, and the SES request.
 - `*PagesTest`, `ClaimantFlowTest`, `StaffAccessTest`: real HTTP requests through Spring
   Security and the templates, including logins, roles, CSRF, and file uploads.
 
@@ -173,6 +183,11 @@ This provisions, inside your account's **default VPC**:
 - An IAM role for the EC2 instance that can only read and write that one bucket. The app
   gets short-lived credentials from the role, so there are no AWS keys anywhere. The
   instance requires IMDSv2.
+- **Emails through Amazon SES**, if you set `notification_from_email` in
+  `terraform.tfvars`. AWS emails that address a link to click; emails start once you
+  click it. The role may send only from that one address. New SES accounts are in a
+  "sandbox" that can only send to verified addresses, so file demo claims with an email
+  you have verified. Leave it empty and emails stay off.
 
 `terraform apply` prints the app's public IP. Give the instance a minute or two to
 finish booting and building the image before it's reachable on port 8080.
@@ -209,8 +224,8 @@ deliberately rather than by accident, and it's worth being able to say so:
 
 Put the EC2 instance behind an Application Load Balancer with HTTPS and an Auto Scaling
 Group, move secrets out of Terraform variables into AWS Secrets Manager, switch the schema
-to Flyway migrations, and send claimants email notices when their status changes or a
-weekly certification is due.
+to Flyway migrations, and send claimants a reminder email when a weekly certification is
+due.
 
 ## License
 

@@ -31,3 +31,9 @@ documents:
 
 fraud:
   high-wage-threshold: 4000.00
+
+notifications:
+  enabled: false   # NotificationFlowTest turns it on
+  sender: smtp
+  from: test@example.com
+  base-url: http://localhost:8080

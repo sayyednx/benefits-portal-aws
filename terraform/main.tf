@@ -196,6 +196,39 @@ resource "aws_iam_role_policy" "documents_access" {
   policy = data.aws_iam_policy_document.documents_access.json
 }
 
+# --- Email (Amazon SES) ---
+# SES sends the claimant emails. AWS only lets you send from an address you have proved
+# you own, so Terraform registers var.notification_from_email and AWS emails it a link to
+# click. Until you click it, emails can't be sent (the app keeps working, it just logs it).
+# New SES accounts are also in a "sandbox": they can only send TO verified addresses too,
+# which is fine for a demo where the claimant email is your own.
+
+resource "aws_sesv2_email_identity" "sender" {
+  count          = var.notification_from_email == "" ? 0 : 1
+  email_identity = var.notification_from_email
+}
+
+# The app may send email only from that one address, and nothing else in SES.
+data "aws_iam_policy_document" "send_email" {
+  count = var.notification_from_email == "" ? 0 : 1
+  statement {
+    actions   = ["ses:SendEmail"]
+    resources = ["*"]
+    condition {
+      test     = "StringEquals"
+      variable = "ses:FromAddress"
+      values   = [var.notification_from_email]
+    }
+  }
+}
+
+resource "aws_iam_role_policy" "send_email" {
+  count  = var.notification_from_email == "" ? 0 : 1
+  name   = "send-claimant-email"
+  role   = aws_iam_role.app.id
+  policy = data.aws_iam_policy_document.send_email[0].json
+}
+
 resource "aws_iam_instance_profile" "app" {
   name = "${var.app_name}-app-profile"
   role = aws_iam_role.app.name
@@ -229,6 +262,8 @@ resource "aws_instance" "app" {
     app_repo_url   = var.app_repo_url
     aws_region     = var.aws_region
     docs_bucket    = aws_s3_bucket.documents.bucket
+    email_enabled  = var.notification_from_email == "" ? "false" : "true"
+    email_from     = var.notification_from_email
   })
 
   tags = { Name = "${var.app_name}-app" }

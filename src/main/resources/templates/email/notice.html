@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<!-- One email layout for every notice. Email apps ignore most CSS files, so styles are inline. -->
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${notice.subject}">Benefits Portal</title>
+</head>
+<body style="margin:0;padding:0;background:#f5f7f9;font-family:'Public Sans',Arial,Helvetica,sans-serif;color:#1b2430;">
+<div style="max-width:600px;margin:0 auto;padding:24px 16px;">
+    <div style="background:#16365c;color:#ffffff;padding:18px 24px;border-radius:10px 10px 0 0;border-bottom:4px solid #e3b23c;">
+        <div style="font-size:20px;font-weight:700;">Benefits Portal</div>
+        <div style="font-size:12px;letter-spacing:1px;text-transform:uppercase;color:#c9d5e3;">Unemployment Insurance</div>
+    </div>
+    <div style="background:#ffffff;padding:28px 24px;border:1px solid #d9dee4;border-top:none;border-radius:0 0 10px 10px;">
+        <h1 style="font-size:24px;margin:0 0 12px;color:#16365c;" th:text="${notice.heading}">Heading</h1>
+        <p style="font-size:16px;line-height:1.55;margin:0 0 20px;" th:text="${notice.intro}">Intro</p>
+
+        <table role="presentation" style="width:100%;border-collapse:collapse;background:#fbf3df;border-left:5px solid #e3b23c;margin:0 0 20px;">
+            <tr th:each="h : ${notice.highlights}">
+                <td style="padding:10px 14px;font-size:14px;color:#55606d;width:45%;vertical-align:top;" th:text="${h.key}">Label</td>
+                <td style="padding:10px 14px;font-size:16px;font-weight:700;color:#16365c;" th:text="${h.value}">Value</td>
+            </tr>
+        </table>
+
+        <p th:each="line : ${notice.details}" style="font-size:15px;line-height:1.55;margin:0 0 14px;" th:text="${line}">Detail</p>
+
+        <p style="margin:24px 0 8px;">
+            <a th:href="${notice.buttonUrl}" th:text="${notice.buttonText}"
+               style="display:inline-block;background:#1f5a96;color:#ffffff;text-decoration:none;font-weight:700;padding:12px 22px;border-radius:6px;">Button</a>
+        </p>
+    </div>
+    <p style="font-size:12px;color:#55606d;text-align:center;margin:16px 0 0;line-height:1.5;">
+        You're getting this email because you filed a claim on the Benefits Portal.<br>
+        Benefits Portal is a portfolio demo by Nabeel Sayyed. It is not a real government service.
+    </p>
+</div>
+</body>
+</html>
