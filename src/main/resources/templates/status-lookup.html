@@ -1,32 +1,39 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Check My Claim — Benefits Portal</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<head th:replace="~{fragments :: head('Check my claim')}"></head>
 <body>
 <header th:replace="~{fragments :: publicHeader}"></header>
 
-<main class="wrap narrow">
+<main id="main" class="wrap narrow">
     <h1>Check my claim</h1>
-    <p class="lede">Enter the confirmation number you got when you filed, and the email you used.</p>
+    <p class="lede">See where your claim stands, check in for the week, appeal a decision, or upload documents.</p>
 
     <p class="flash flash-error" th:if="${error}" th:text="${error}" role="alert"></p>
 
-    <form th:action="@{/status}" method="post" class="form">
-        <div class="field">
-            <label for="confirmationNumber">Confirmation number</label>
-            <input type="text" id="confirmationNumber" name="confirmationNumber" placeholder="UI-XXXX-XXXX"
-                   th:value="${confirmationNumber}" autocomplete="off" required>
-        </div>
-        <div class="field">
-            <label for="email">Email</label>
-            <input type="email" id="email" name="email" autocomplete="email" required>
-        </div>
-        <button type="submit" class="btn-primary">Check status</button>
-    </form>
+    <div class="card">
+        <form th:action="@{/status}" method="post" class="form">
+            <div class="field">
+                <label for="confirmationNumber">Confirmation number</label>
+                <span class="hint" id="cn-hint">You got this right after you filed. It looks like UI-7K3F-9QX2.</span>
+                <input type="text" id="confirmationNumber" name="confirmationNumber" placeholder="UI-XXXX-XXXX"
+                       th:value="${confirmationNumber}" autocomplete="off" aria-describedby="cn-hint" required>
+            </div>
+            <div class="field">
+                <label for="email">Email</label>
+                <span class="hint" id="email-hint">The email you used when you filed.</span>
+                <input type="email" id="email" name="email" autocomplete="email" aria-describedby="email-hint" required>
+            </div>
+            <div><button type="submit" class="btn-primary">Check my claim</button></div>
+        </form>
+    </div>
+
+    <div class="callout">
+        <svg th:replace="~{icons :: lock}"></svg>
+        <p>We ask for both your confirmation number and your email so nobody else can see your claim.
+            Lost your number? Look for the screenshot or note you made when you filed.</p>
+    </div>
 </main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
 </body>
 </html>

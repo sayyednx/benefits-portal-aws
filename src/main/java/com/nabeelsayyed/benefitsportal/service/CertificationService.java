@@ -50,6 +50,10 @@ public class CertificationService {
         this.clock = clock;
     }
 
+    public int getMaxWeeks() {
+        return maxWeeks;
+    }
+
     /** The most this claim can ever pay: weekly benefit x max weeks. */
     public BigDecimal maximumBenefit(Claim claim) {
         return claim.getWeeklyBenefitAmount().multiply(BigDecimal.valueOf(maxWeeks));

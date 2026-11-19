@@ -1,62 +1,68 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin — Benefits Portal</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
-<body>
+<head th:replace="~{fragments :: head('Claims queue')}"></head>
+<body class="staff">
 <header th:replace="~{fragments :: staffHeader}"></header>
 
-<main class="wrap">
+<main id="main" class="wrap">
     <h1>Claims queue</h1>
+    <p class="lede">Review new claims, decide appeals, and clear fraud flags.</p>
 
-    <div class="filter-row">
+    <div class="stat-row">
+        <div class="stat"><div class="num" th:text="${countAll}">0</div><div class="lbl">All claims</div></div>
+        <div class="stat"><div class="num" th:text="${countToReview}">0</div><div class="lbl">Waiting for review</div></div>
+        <div class="stat"><div class="num" th:text="${countAppeals}">0</div><div class="lbl">Appeals to decide</div></div>
+        <div class="stat"><div class="num" th:text="${flaggedIds.size()}">0</div><div class="lbl">Open fraud flags</div></div>
+    </div>
+
+    <div class="filter-row" aria-label="Filter claims">
         <a th:href="@{/admin/claims}" th:classappend="${selectedStatus == null and !flaggedOnly} ? 'chip-active' : ''" class="chip">All</a>
-        <a th:href="@{/admin/claims(flagged=true)}" th:classappend="${flaggedOnly} ? 'chip-active' : ''" class="chip chip-flag"
-           th:text="'Flagged (' + ${flaggedIds.size()} + ')'"></a>
         <a th:each="s : ${statuses}"
            th:href="@{/admin/claims(status=${s})}"
            th:classappend="${selectedStatus == s.toString()} ? 'chip-active' : ''"
-           th:text="${s}" class="chip"></a>
+           th:text="${s.label}" class="chip"></a>
+        <a th:href="@{/admin/claims(flagged=true)}" th:classappend="${flaggedOnly} ? 'chip-active' : ''" class="chip chip-flag"
+           th:text="'Flagged (' + ${flaggedIds.size()} + ')'"></a>
     </div>
 
-    <table class="claims-table">
-        <thead>
-        <tr>
-            <th>ID</th><th>Flag</th><th>Claimant</th><th>Employer</th><th>Reason</th>
-            <th>Weekly wage</th><th>Benefit</th><th>Eligible</th><th>Status</th><th>Filed</th><th>Decision</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="claim : ${claims}">
-            <td><a th:href="@{/admin/claims/{id}(id=${claim.id})}" th:text="${claim.id}"></a></td>
-            <td><span th:if="${flaggedIds.contains(claim.id)}" class="status-pill status-flag" title="Open fraud flag">Flagged</span></td>
-            <td>
-                <div th:text="${claim.claimantName}"></div>
-                <div class="muted" th:text="${claim.claimantEmail}"></div>
-            </td>
-            <td th:text="${claim.employerName}"></td>
-            <td th:text="${claim.separationReason}"></td>
-            <td th:text="'$' + ${claim.averageWeeklyWage}"></td>
-            <td th:text="'$' + ${claim.weeklyBenefitAmount}"></td>
-            <td>
-                <span th:if="${claim.eligible}" class="status-pill status-approved">Yes</span>
-                <span th:unless="${claim.eligible}" class="status-pill status-denied">No</span>
-            </td>
-            <td><span th:text="${claim.status}" th:classappend="'status-' + ${#strings.toLowerCase(claim.status)}" class="status-pill"></span></td>
-            <td th:text="${#temporals.format(claim.filedAt, 'MMM d, h:mm a')}"></td>
-            <td>
-                <a th:href="@{/admin/claims/{id}(id=${claim.id})}"
-                   th:text="${claim.status.finalForStaff} ? 'View' : 'Review'" class="btn-small"></a>
-            </td>
-        </tr>
-        <tr th:if="${claims.isEmpty()}">
-            <td colspan="11" class="muted">No claims match this filter.</td>
-        </tr>
-        </tbody>
-    </table>
+    <div class="table-wrap">
+        <table class="claims-table">
+            <thead>
+            <tr>
+                <th>ID</th><th>Claimant</th><th>Employer</th><th>Reason</th>
+                <th>Weekly pay</th><th>Benefit</th><th>Status</th><th>Filed</th><th></th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="claim : ${claims}">
+                <td><a th:href="@{/admin/claims/{id}(id=${claim.id})}" th:text="'#' + ${claim.id}"></a></td>
+                <td>
+                    <div><strong th:text="${claim.claimantName}"></strong></div>
+                    <div class="muted" th:text="${claim.claimantEmail}"></div>
+                    <span th:if="${flaggedIds.contains(claim.id)}" class="status-pill status-flag" title="Open fraud flag">Flagged</span>
+                </td>
+                <td th:text="${claim.employerName}"></td>
+                <td>
+                    <div th:text="${claim.separationReason.label}"></div>
+                    <span th:unless="${claim.eligible}" class="muted">Not monetarily eligible</span>
+                </td>
+                <td th:text="'$' + ${claim.averageWeeklyWage}"></td>
+                <td th:text="'$' + ${claim.weeklyBenefitAmount}"></td>
+                <td><span th:text="${claim.status.label}" th:classappend="'status-' + ${#strings.toLowerCase(claim.status)}" class="status-pill"></span></td>
+                <td th:text="${#temporals.format(claim.filedAt, 'MMM d, h:mm a')}"></td>
+                <td>
+                    <a th:href="@{/admin/claims/{id}(id=${claim.id})}"
+                       th:text="${claim.status.finalForStaff} ? 'View' : 'Review'" class="btn-small"></a>
+                </td>
+            </tr>
+            <tr th:if="${claims.isEmpty()}">
+                <td colspan="9" class="muted">No claims match this filter.</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
 </body>
 </html>

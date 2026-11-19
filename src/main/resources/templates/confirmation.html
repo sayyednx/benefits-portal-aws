@@ -1,43 +1,60 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Claim Submitted — Benefits Portal</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<head th:replace="~{fragments :: head('Claim submitted')}"></head>
 <body>
 <header th:replace="~{fragments :: publicHeader}"></header>
 
-<main class="wrap narrow">
-    <h1>Your claim is filed</h1>
+<main id="main" class="wrap narrow">
+    <div class="success-head">
+        <div class="success-icon"><svg th:replace="~{icons :: check}"></svg></div>
+        <div>
+            <h1>Your claim is filed</h1>
+            <p class="muted" th:text="'Submitted ' + ${#temporals.format(claim.filedAt, 'MMMM d, yyyy, h:mm a')}"></p>
+        </div>
+    </div>
 
     <div class="card confirmation-box">
         <p class="muted">Your confirmation number</p>
         <p class="confirmation-number" th:text="${claim.confirmationNumber}"></p>
-        <p>Write this down. You'll need it, with your email, to <a th:href="@{/status}">check your claim</a>,
-            file weekly certifications, and upload documents.</p>
+        <p>Write this down or take a screenshot. You'll need it, with your email, to check your claim,
+            check in each week, and upload documents.</p>
     </div>
 
     <div class="card" th:if="${claim.eligible}">
-        <p class="status-pill status-approved" th:text="'Weekly benefit: $' + ${claim.weeklyBenefitAmount}"></p>
-        <p>Based on what you reported, you're monetarily eligible. Your claim now moves to review — an admin
-            will confirm the details before any payment goes out.</p>
+        <span class="status-pill status-approved">Estimated weekly benefit</span>
+        <p class="confirmation-number" th:text="'$' + ${claim.weeklyBenefitAmount}"></p>
+        <p>Based on what you told us, you meet the basic requirements. A caseworker will review your claim
+            before any payment goes out.</p>
     </div>
 
     <div class="card" th:unless="${claim.eligible}">
-        <p class="status-pill status-denied">Not monetarily eligible</p>
-        <p>Based on the separation reason you selected, this claim doesn't qualify for benefits under this
-            program's rules. It's still on file and can be reviewed by an admin.</p>
+        <span class="status-pill status-denied">Likely not eligible</span>
+        <p>The reason you gave for your job ending usually doesn't qualify for benefits. Your claim is still on file,
+            and a caseworker will review it. If it's denied, you'll be able to appeal and explain your side.</p>
     </div>
 
-    <dl class="summary">
-        <dt>Status</dt><dd th:text="${claim.status}"></dd>
-        <dt>Filed</dt><dd th:text="${#temporals.format(claim.filedAt, 'MMM d, yyyy h:mm a')}"></dd>
-        <dt>Employer</dt><dd th:text="${claim.employerName}"></dd>
-    </dl>
+    <div class="card">
+        <h2>What happens next</h2>
+        <ol class="next-steps">
+            <li><span class="step-num">1</span>
+                <div><strong>A caseworker reviews your claim</strong>
+                    <p>This usually takes a few days. They may contact your employer to confirm the details.</p></div></li>
+            <li><span class="step-num">2</span>
+                <div><strong>Upload proof if you have it</strong>
+                    <p>A layoff letter or recent pay stub can speed things up. Upload it from the "Check my claim" page.</p></div></li>
+            <li><span class="step-num">3</span>
+                <div><strong>Check in every week</strong>
+                    <p>Once approved, answer a few questions each week to get paid. Keep looking for work and write down
+                        the employers you contact.</p></div></li>
+        </ol>
+    </div>
 
-    <a th:href="@{/}" class="btn-secondary">File another claim</a>
+    <div class="hero-actions">
+        <a th:href="@{/status}" class="btn-primary">Check my claim</a>
+        <a th:href="@{/help}" class="btn-secondary">Read common questions</a>
+    </div>
 </main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
 </body>
 </html>

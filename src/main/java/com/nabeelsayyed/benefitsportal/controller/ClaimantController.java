@@ -8,6 +8,7 @@ import com.nabeelsayyed.benefitsportal.service.AuditService;
 import com.nabeelsayyed.benefitsportal.service.CertificationService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import com.nabeelsayyed.benefitsportal.service.DocumentService;
+import com.nabeelsayyed.benefitsportal.service.PaymentCalculator;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -42,13 +43,16 @@ public class ClaimantController {
     private final AuditService auditService;
     private final CertificationService certificationService;
     private final DocumentService documentService;
+    private final PaymentCalculator paymentCalculator;
 
     public ClaimantController(ClaimService claimService, AuditService auditService,
-                              CertificationService certificationService, DocumentService documentService) {
+                              CertificationService certificationService, DocumentService documentService,
+                              PaymentCalculator paymentCalculator) {
         this.claimService = claimService;
         this.auditService = auditService;
         this.certificationService = certificationService;
         this.documentService = documentService;
+        this.paymentCalculator = paymentCalculator;
     }
 
     @GetMapping("/status")
@@ -97,6 +101,7 @@ public class ClaimantController {
         model.addAttribute("remainingBalance", certificationService.remainingBalance(claim));
         model.addAttribute("documents", documentService.documentsFor(claimId));
         model.addAttribute("documentTypes", DocumentType.values());
+        model.addAttribute("minJobContacts", paymentCalculator.getMinJobContacts());
         if (!model.containsAttribute("certification")) {
             CertificationRequest form = new CertificationRequest();
             form.setWeekEnding(weeksDue.isEmpty() ? null : weeksDue.get(0));

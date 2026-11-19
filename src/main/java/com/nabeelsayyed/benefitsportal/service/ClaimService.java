@@ -152,6 +152,23 @@ public class ClaimService {
         return raw;
     }
 
+    // Read by the claim form so its benefit estimate uses the same numbers as the real calculation.
+    public BigDecimal getWageReplacementRate() {
+        return wageReplacementRate;
+    }
+
+    public BigDecimal getMinWeeklyBenefit() {
+        return minWeeklyBenefit;
+    }
+
+    public BigDecimal getMaxWeeklyBenefit() {
+        return maxWeeklyBenefit;
+    }
+
+    public int getAppealWindowDays() {
+        return appealWindowDays;
+    }
+
     @Transactional(readOnly = true)
     public List<Claim> findAll() {
         return claimRepository.findAllByOrderByFiledAtDesc();

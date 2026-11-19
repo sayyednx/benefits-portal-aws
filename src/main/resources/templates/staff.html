@@ -1,21 +1,17 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Staff Accounts — Benefits Portal</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
-<body>
+<head th:replace="~{fragments :: head('Staff accounts')}"></head>
+<body class="staff">
 <header th:replace="~{fragments :: staffHeader}"></header>
 
-<main class="wrap">
+<main id="main" class="wrap">
     <h1>Staff accounts</h1>
     <p class="lede">Caseworkers review claims. Supervisors can also decide appeals and manage accounts.</p>
 
     <p class="flash flash-ok" th:if="${message}" th:text="${message}" role="status"></p>
     <p class="flash flash-error" th:if="${error}" th:text="${error}" role="alert"></p>
 
+    <div class="table-wrap">
     <table class="claims-table">
         <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Status</th><th></th></tr></thead>
         <tbody>
@@ -23,7 +19,8 @@
             <td th:text="${s.username}"></td>
             <td th:text="${s.fullName}"></td>
             <td th:text="${s.role}"></td>
-            <td th:text="${s.active} ? 'Active' : 'Switched off'"></td>
+            <td><span class="status-pill" th:classappend="${s.active} ? 'status-approved' : 'status-denied'"
+                      th:text="${s.active} ? 'Active' : 'Switched off'"></span></td>
             <td>
                 <form th:action="@{/admin/staff/{id}/active(id=${s.id})}" method="post">
                     <input type="hidden" name="active" th:value="${!s.active}">
@@ -33,6 +30,7 @@
         </tr>
         </tbody>
     </table>
+    </div>
 
     <section class="card spaced">
         <h2>Add a staff member</h2>
@@ -51,5 +49,7 @@
         </form>
     </section>
 </main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
 </body>
 </html>

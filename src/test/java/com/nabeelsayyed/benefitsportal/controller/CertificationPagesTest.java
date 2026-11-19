@@ -79,8 +79,8 @@ class CertificationPagesTest {
 
         mvc.perform(get("/status/claim").session(session))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Weekly certification")))
-                .andExpect(content().string(containsString("You have 2 weeks to certify")));
+                .andExpect(content().string(containsString("Weekly check-in")))
+                .andExpect(content().string(containsString("You have 2 weeks to check in for")));
 
         mvc.perform(post("/status/certify").session(session).with(csrf())
                         .param("weekEnding", "2026-03-07")

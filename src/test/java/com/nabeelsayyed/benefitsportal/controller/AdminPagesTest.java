@@ -61,7 +61,7 @@ class AdminPagesTest {
         mvc.perform(get("/admin/claims/" + claim.getId()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("History")))
-                .andExpect(content().string(containsString("FILED")));
+                .andExpect(content().string(containsString("Claim filed")));
     }
 
     @Test

@@ -35,6 +35,18 @@ public class PaymentCalculator {
         this.waitingWeekEnabled = waitingWeekEnabled;
     }
 
+    public int getMinJobContacts() {
+        return minJobContacts;
+    }
+
+    public BigDecimal getEarningsDisregardRate() {
+        return earningsDisregardRate;
+    }
+
+    public boolean isWaitingWeekEnabled() {
+        return waitingWeekEnabled;
+    }
+
     /** The result for one week: what happened, how much, and a plain-English reason. */
     public record WeekResult(CertificationOutcome outcome, BigDecimal amount, String reason) {
         static WeekResult notPayable(String reason) {

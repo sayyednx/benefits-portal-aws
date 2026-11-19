@@ -11,6 +11,7 @@ import com.nabeelsayyed.benefitsportal.service.CertificationService;
 import com.nabeelsayyed.benefitsportal.service.ClaimService;
 import com.nabeelsayyed.benefitsportal.service.DocumentService;
 import com.nabeelsayyed.benefitsportal.service.FraudCheckService;
+import com.nabeelsayyed.benefitsportal.service.PaymentCalculator;
 import com.nabeelsayyed.benefitsportal.service.StaffService;
 import jakarta.validation.Valid;
 import org.springframework.http.ContentDisposition;
@@ -34,16 +35,19 @@ public class WebController {
     private final StaffService staffService;
     private final DocumentService documentService;
     private final FraudCheckService fraudCheckService;
+    private final PaymentCalculator paymentCalculator;
 
     public WebController(ClaimService claimService, AuditService auditService,
                          CertificationService certificationService, StaffService staffService,
-                         DocumentService documentService, FraudCheckService fraudCheckService) {
+                         DocumentService documentService, FraudCheckService fraudCheckService,
+                         PaymentCalculator paymentCalculator) {
         this.claimService = claimService;
         this.auditService = auditService;
         this.certificationService = certificationService;
         this.staffService = staffService;
         this.documentService = documentService;
         this.fraudCheckService = fraudCheckService;
+        this.paymentCalculator = paymentCalculator;
     }
 
     @GetMapping("/")
@@ -51,8 +55,31 @@ public class WebController {
         if (!model.containsAttribute("claimRequest")) {
             model.addAttribute("claimRequest", new ClaimRequest());
         }
-        model.addAttribute("separationReasons", SeparationReason.values());
+        addFormHelp(model);
         return "index";
+    }
+
+    /** The reasons list plus the numbers the form's live benefit estimate needs. */
+    private void addFormHelp(Model model) {
+        model.addAttribute("separationReasons", SeparationReason.values());
+        model.addAttribute("replacementRate", claimService.getWageReplacementRate());
+        model.addAttribute("minBenefit", claimService.getMinWeeklyBenefit());
+        model.addAttribute("maxBenefit", claimService.getMaxWeeklyBenefit());
+    }
+
+    /** Plain-English answers to common claimant questions. */
+    @GetMapping("/help")
+    public String help(Model model) {
+        addFormHelp(model);
+        model.addAttribute("appealWindowDays", claimService.getAppealWindowDays());
+        model.addAttribute("minJobContacts", paymentCalculator.getMinJobContacts());
+        model.addAttribute("disregardPercent",
+                paymentCalculator.getEarningsDisregardRate().movePointRight(2).stripTrailingZeros().toPlainString());
+        model.addAttribute("waitingWeek", paymentCalculator.isWaitingWeekEnabled());
+        model.addAttribute("maxWeeks", certificationService.getMaxWeeks());
+        model.addAttribute("replacementPercent",
+                claimService.getWageReplacementRate().movePointRight(2).stripTrailingZeros().toPlainString());
+        return "help";
     }
 
     @PostMapping("/claims")
@@ -60,7 +87,7 @@ public class WebController {
                                BindingResult bindingResult,
                                Model model) {
         if (bindingResult.hasErrors()) {
-            model.addAttribute("separationReasons", SeparationReason.values());
+            addFormHelp(model);
             return "index";
         }
         var claim = claimService.fileClaim(claimRequest);
@@ -78,9 +105,15 @@ public class WebController {
                                  @RequestParam(required = false) boolean flagged,
                                  Model model) {
         var flaggedIds = fraudCheckService.claimIdsWithOpenFlags();
+        var all = claimService.findAll();
         var claims = status == null || status.isBlank()
-                ? claimService.findAll()
+                ? all
                 : claimService.findByStatus(ClaimStatus.valueOf(status));
+        // Numbers for the summary tiles at the top of the queue.
+        model.addAttribute("countAll", all.size());
+        model.addAttribute("countToReview", all.stream()
+                .filter(c -> c.getStatus() == ClaimStatus.FILED || c.getStatus() == ClaimStatus.UNDER_REVIEW).count());
+        model.addAttribute("countAppeals", all.stream().filter(c -> c.getStatus() == ClaimStatus.APPEALED).count());
         if (flagged) {
             claims = claims.stream().filter(c -> flaggedIds.contains(c.getId())).toList();
         }
@@ -118,7 +151,7 @@ public class WebController {
         decision.setReviewerNotes(reviewerNotes);
         try {
             claimService.decide(id, decision);
-            redirect.addFlashAttribute("message", "Claim #" + id + " is now " + status + ".");
+            redirect.addFlashAttribute("message", "Claim #" + id + " is now " + status.getLabel() + ".");
         } catch (InvalidClaimActionException | AccessDeniedException ex) {
             redirect.addFlashAttribute("error", ex.getMessage());
         }

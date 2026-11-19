@@ -1,63 +1,197 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>File an Unemployment Claim — Benefits Portal</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<head th:replace="~{fragments :: head('File an unemployment claim')}"></head>
 <body>
 <header th:replace="~{fragments :: publicHeader}"></header>
 
-<main class="wrap narrow">
-    <h1>File an unemployment claim</h1>
-    <p class="lede">Tell us about your job separation. We'll calculate your weekly benefit amount right away.</p>
+<main id="main" class="wrap">
+    <section class="hero">
+        <div>
+            <h1>Lost your job? You may be able to get weekly benefits.</h1>
+            <p class="lede">Unemployment insurance pays part of your lost wages while you look for a new job.
+                Filing takes about 10 minutes, and you'll see an estimate of your weekly benefit right away.</p>
+            <div class="hero-actions">
+                <a href="#apply" class="btn-primary">Start your claim</a>
+                <a th:href="@{/status}" class="btn-secondary">Check an existing claim</a>
+            </div>
+        </div>
+        <svg th:replace="~{icons :: hero}"></svg>
+    </section>
 
-    <form th:action="@{/claims}" th:object="${claimRequest}" method="post" class="form">
+    <h2>How it works</h2>
+    <ol class="steps">
+        <li>
+            <div class="step-icon"><svg th:replace="~{icons :: file}"></svg></div>
+            <h3>1. File your claim</h3>
+            <p>Tell us about your last job and why it ended. You'll get a confirmation number.</p>
+        </li>
+        <li>
+            <div class="step-icon"><svg th:replace="~{icons :: search}"></svg></div>
+            <h3>2. We review it</h3>
+            <p>A caseworker checks your details. You can upload proof, like a layoff letter, to help.</p>
+        </li>
+        <li>
+            <div class="step-icon"><svg th:replace="~{icons :: calendar}"></svg></div>
+            <h3>3. Check in each week</h3>
+            <p>Once approved, answer a few questions every week about your job search.</p>
+        </li>
+        <li>
+            <div class="step-icon"><svg th:replace="~{icons :: cash}"></svg></div>
+            <h3>4. Get paid</h3>
+            <p>Each week you qualify for is paid, for up to 26 weeks.</p>
+        </li>
+    </ol>
 
-        <div class="field">
-            <label for="claimantName">Full name</label>
-            <input type="text" id="claimantName" th:field="*{claimantName}">
-            <span class="error" th:if="${#fields.hasErrors('claimantName')}" th:errors="*{claimantName}"></span>
+    <div class="apply-layout" id="apply">
+        <div class="card">
+            <h2>File an unemployment claim</h2>
+            <p class="muted">All fields are required.</p>
+
+            <form th:action="@{/claims}" th:object="${claimRequest}" method="post" class="form" novalidate>
+
+                <div class="form-section">
+                    <h2><span class="step-num">1</span> About you</h2>
+                    <div class="form">
+                        <div class="field" th:classappend="${#fields.hasErrors('claimantName')} ? 'has-error'">
+                            <label for="claimantName">Full legal name</label>
+                            <span class="hint" id="claimantName-hint">As it appears on your ID.</span>
+                            <input type="text" id="claimantName" th:field="*{claimantName}" autocomplete="name"
+                                   aria-describedby="claimantName-hint">
+                            <span class="error" th:if="${#fields.hasErrors('claimantName')}" th:errors="*{claimantName}"></span>
+                        </div>
+
+                        <div class="field" th:classappend="${#fields.hasErrors('claimantEmail')} ? 'has-error'">
+                            <label for="claimantEmail">Email</label>
+                            <span class="hint" id="claimantEmail-hint">You'll use this with your confirmation number to check your claim.</span>
+                            <input type="email" id="claimantEmail" th:field="*{claimantEmail}" autocomplete="email"
+                                   aria-describedby="claimantEmail-hint">
+                            <span class="error" th:if="${#fields.hasErrors('claimantEmail')}" th:errors="*{claimantEmail}"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2><span class="step-num">2</span> Your last job</h2>
+                    <div class="form">
+                        <div class="field" th:classappend="${#fields.hasErrors('employerName')} ? 'has-error'">
+                            <label for="employerName">Employer name</label>
+                            <span class="hint" id="employerName-hint">The company you most recently worked for. Check a pay stub if you're not sure.</span>
+                            <input type="text" id="employerName" th:field="*{employerName}" autocomplete="organization"
+                                   aria-describedby="employerName-hint">
+                            <span class="error" th:if="${#fields.hasErrors('employerName')}" th:errors="*{employerName}"></span>
+                        </div>
+
+                        <div class="field" th:classappend="${#fields.hasErrors('lastDayWorked')} ? 'has-error'">
+                            <label for="lastDayWorked">Last day you worked</label>
+                            <span class="hint" id="lastDayWorked-hint">The last day you actually did work, not the day you were told.</span>
+                            <input type="date" id="lastDayWorked" th:field="*{lastDayWorked}" aria-describedby="lastDayWorked-hint">
+                            <span class="error" th:if="${#fields.hasErrors('lastDayWorked')}" th:errors="*{lastDayWorked}"></span>
+                        </div>
+
+                        <div class="field" th:classappend="${#fields.hasErrors('separationReason')} ? 'has-error'">
+                            <label for="separationReason">Why did your job end?</label>
+                            <select id="separationReason" th:field="*{separationReason}" aria-describedby="reason-help">
+                                <option value="">Select one</option>
+                                <option th:each="reason : ${separationReasons}" th:value="${reason}" th:text="${reason.label}"></option>
+                            </select>
+                            <span class="error" th:if="${#fields.hasErrors('separationReason')}" th:errors="*{separationReason}"></span>
+                            <details id="reason-help">
+                                <summary>Not sure which one to pick?</summary>
+                                <ul class="reason-list">
+                                    <li th:each="reason : ${separationReasons}">
+                                        <strong th:text="${reason.label}"></strong>: <span th:text="${reason.hint}"></span>
+                                    </li>
+                                </ul>
+                                <p class="muted">Pick the one that fits best. A caseworker may contact your employer to confirm,
+                                    and you can explain more later.</p>
+                            </details>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <h2><span class="step-num">3</span> Your pay</h2>
+                    <div class="field" th:classappend="${#fields.hasErrors('averageWeeklyWage')} ? 'has-error'">
+                        <label for="averageWeeklyWage">Average weekly pay, before taxes</label>
+                        <span class="hint" id="wage-hint">Example: if you earned $3,200 a month, that's about $740 a week
+                            (monthly pay × 12 ÷ 52).</span>
+                        <div class="input-prefix">
+                            <span>$</span>
+                            <input type="number" step="0.01" min="0" id="averageWeeklyWage" th:field="*{averageWeeklyWage}"
+                                   inputmode="decimal" aria-describedby="wage-hint">
+                        </div>
+                        <span class="error" th:if="${#fields.hasErrors('averageWeeklyWage')}" th:errors="*{averageWeeklyWage}"></span>
+                    </div>
+                </div>
+
+                <div class="form-section">
+                    <button type="submit" class="btn-primary">Submit my claim</button>
+                </div>
+            </form>
         </div>
 
-        <div class="field">
-            <label for="claimantEmail">Email</label>
-            <input type="email" id="claimantEmail" th:field="*{claimantEmail}">
-            <span class="error" th:if="${#fields.hasErrors('claimantEmail')}" th:errors="*{claimantEmail}"></span>
-        </div>
+        <aside class="sidebar" aria-label="Help with your claim">
+            <div class="estimate" aria-live="polite">
+                <h2>Your estimated weekly benefit</h2>
+                <div class="amount" id="estimate-amount">$—</div>
+                <p id="estimate-note">Enter your weekly pay to see an estimate.</p>
+            </div>
 
-        <div class="field">
-            <label for="employerName">Former employer</label>
-            <input type="text" id="employerName" th:field="*{employerName}">
-            <span class="error" th:if="${#fields.hasErrors('employerName')}" th:errors="*{employerName}"></span>
-        </div>
+            <div class="card">
+                <h2>Have these ready</h2>
+                <ul class="checklist">
+                    <li><svg th:replace="~{icons :: check}"></svg> Your last employer's name</li>
+                    <li><svg th:replace="~{icons :: check}"></svg> The last day you worked</li>
+                    <li><svg th:replace="~{icons :: check}"></svg> Your average weekly pay (a pay stub helps)</li>
+                    <li><svg th:replace="~{icons :: check}"></svg> An email address you check</li>
+                </ul>
+            </div>
 
-        <div class="field">
-            <label for="lastDayWorked">Last day worked</label>
-            <input type="date" id="lastDayWorked" th:field="*{lastDayWorked}">
-            <span class="error" th:if="${#fields.hasErrors('lastDayWorked')}" th:errors="*{lastDayWorked}"></span>
-        </div>
-
-        <div class="field">
-            <label for="separationReason">Reason you're no longer working</label>
-            <select id="separationReason" th:field="*{separationReason}">
-                <option value="">Select one</option>
-                <option th:each="reason : ${separationReasons}"
-                        th:value="${reason}"
-                        th:text="${reason}"></option>
-            </select>
-            <span class="error" th:if="${#fields.hasErrors('separationReason')}" th:errors="*{separationReason}"></span>
-        </div>
-
-        <div class="field">
-            <label for="averageWeeklyWage">Average weekly wage ($)</label>
-            <input type="number" step="0.01" id="averageWeeklyWage" th:field="*{averageWeeklyWage}">
-            <span class="error" th:if="${#fields.hasErrors('averageWeeklyWage')}" th:errors="*{averageWeeklyWage}"></span>
-        </div>
-
-        <button type="submit" class="btn-primary">Submit claim</button>
-    </form>
+            <div class="callout">
+                <svg th:replace="~{icons :: help}"></svg>
+                <p>Questions about who qualifies or how the amount is worked out?
+                    <a th:href="@{/help}">Read the help page</a>.</p>
+            </div>
+        </aside>
+    </div>
 </main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+
+<!-- The same formula as ClaimService.calculateWeeklyBenefit, with the numbers passed in from the server. -->
+<script th:inline="javascript">
+    (function () {
+        var rate = /*[[${replacementRate}]]*/ 0.5;
+        var min = /*[[${minBenefit}]]*/ 50;
+        var max = /*[[${maxBenefit}]]*/ 500;
+        var wage = document.getElementById('averageWeeklyWage');
+        var reason = document.getElementById('separationReason');
+        var amount = document.getElementById('estimate-amount');
+        var note = document.getElementById('estimate-note');
+        var disqualifying = ['FIRED_MISCONDUCT', 'QUIT_NO_CAUSE'];
+
+        function update() {
+            var w = parseFloat(wage.value);
+            if (!(w > 0)) {
+                amount.textContent = '$—';
+                note.textContent = 'Enter your weekly pay to see an estimate.';
+                return;
+            }
+            if (disqualifying.indexOf(reason.value) !== -1) {
+                amount.textContent = '$0';
+                note.textContent = 'This reason usually does not qualify. You can still file, and you can appeal if denied.';
+                return;
+            }
+            var b = Math.min(max, Math.max(min, Math.round(w * rate * 100) / 100));
+            amount.textContent = '$' + b.toFixed(2);
+            note.textContent = 'About ' + Math.round(rate * 100) + '% of your pay, between $' + min + ' and $' + max
+                + ' a week. Final amount is confirmed when you submit.';
+        }
+
+        wage.addEventListener('input', update);
+        reason.addEventListener('change', update);
+        update();
+    })();
+</script>
 </body>
 </html>

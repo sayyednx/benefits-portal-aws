@@ -194,4 +194,18 @@ class ClaimantFlowTest {
                 .andExpect(status().isOk())
                 .andExpect(content().string(not(containsString("FLAG"))));
     }
+
+    @Test
+    void theHomeAndHelpPagesExplainTheRules() throws Exception {
+        mvc.perform(get("/"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("How it works")))
+                .andExpect(content().string(containsString("Laid off (lack of work)")))
+                .andExpect(content().string(containsString("not a real government website")));
+        mvc.perform(get("/help"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(containsString("What counts as a job contact?")))
+                .andExpect(content().string(containsString("26 weeks")));
+        mvc.perform(get("/img/logo.svg")).andExpect(status().isOk());
+    }
 }

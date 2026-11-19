@@ -30,7 +30,8 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/", "/claims/**", "/status", "/status/**", "/css/**", "/error").permitAll()
+                        .requestMatchers("/", "/help", "/claims/**", "/status", "/status/**",
+                                "/css/**", "/img/**", "/js/**", "/favicon.svg", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/claims").permitAll() // public claim submission only
                         .requestMatchers("/admin/staff/**").hasRole("SUPERVISOR")
                         .requestMatchers("/api/**").hasAnyRole("CASEWORKER", "SUPERVISOR")

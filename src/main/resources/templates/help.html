@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments :: head('Help and common questions')}"></head>
+<body>
+<header th:replace="~{fragments :: publicHeader}"></header>
+
+<main id="main" class="wrap narrow">
+    <h1>Help and common questions</h1>
+    <p class="lede">Plain-English answers about filing a claim, checking in each week, and getting paid.</p>
+
+    <h2>Before you file</h2>
+
+    <details open>
+        <summary>Who can get unemployment benefits?</summary>
+        <p>Usually, people who lost their job through no fault of their own. That includes being laid off,
+            your employer closing, or being let go for reasons that weren't misconduct.</p>
+        <p>If you quit for a personal reason, or were fired for breaking a rule on purpose, you usually don't qualify.
+            You can still file. A caseworker reviews every claim, and you can appeal a denial.</p>
+    </details>
+
+    <details>
+        <summary>How is my weekly benefit worked out?</summary>
+        <p>Your weekly benefit is <strong th:text="${replacementPercent} + '%'">50%</strong> of your average weekly pay,
+            but never less than <strong th:text="'$' + ${minBenefit}"></strong> or more than
+            <strong th:text="'$' + ${maxBenefit}"></strong> a week.</p>
+        <p><strong>Example:</strong> you earned $800 a week. Half of that is $400, so your weekly benefit is $400.
+            If you earned $1,400 a week, half would be $700, but the most you can get is
+            <span th:text="'$' + ${maxBenefit}"></span>.</p>
+    </details>
+
+    <details>
+        <summary>What do I need to file?</summary>
+        <ul>
+            <li>Your last employer's name</li>
+            <li>The last day you worked</li>
+            <li>Why your job ended</li>
+            <li>Your average weekly pay before taxes (a pay stub helps)</li>
+            <li>An email address you check</li>
+        </ul>
+    </details>
+
+    <h2 class="spaced">After you file</h2>
+
+    <details>
+        <summary>What happens after I file?</summary>
+        <p>You get a confirmation number right away. A caseworker then reviews your claim. They may contact your
+            employer to confirm why your job ended. You can follow along on the <a th:href="@{/status}">Check my claim</a> page.</p>
+    </details>
+
+    <details>
+        <summary>What documents should I upload?</summary>
+        <p>Anything that backs up what you told us. Good examples are a layoff or separation letter, your last pay stub,
+            or a photo ID. Files must be PDF, PNG, or JPEG and up to 5 MB each.</p>
+    </details>
+
+    <details>
+        <summary>What if my claim is denied?</summary>
+        <p>You'll see the reason on your claim page. If you think it's wrong, you can file an appeal within
+            <strong th:text="${appealWindowDays} + ' days'">30 days</strong> of the decision.
+            Explain what happened with facts and dates, and upload any proof. A supervisor who did not make the first
+            decision will look at your claim again. You can appeal once.</p>
+    </details>
+
+    <h2 class="spaced">Getting paid each week</h2>
+
+    <details>
+        <summary>What is a weekly check-in?</summary>
+        <p>Once your claim is approved, you answer a few questions for each week (Sunday to Saturday) to get paid
+            for that week. You can check in for a week after it ends.</p>
+        <p>You'll be asked if you were able to work, if you turned down a job, how many employers you contacted,
+            and how much you earned.</p>
+    </details>
+
+    <details>
+        <summary>What counts as a job contact?</summary>
+        <p>You need at least <strong th:text="${minJobContacts}">3</strong> each week. Each of these counts as one:</p>
+        <ul>
+            <li>Applying for a job online or in person</li>
+            <li>Sending your resume to an employer</li>
+            <li>Going to a job interview</li>
+            <li>Going to a job fair and talking to employers</li>
+        </ul>
+        <p>Keep a simple list of who you contacted and when, in case you're asked.</p>
+    </details>
+
+    <details>
+        <summary>Can I work part-time and still get paid?</summary>
+        <p>Yes. Tell us what you earned that week, before taxes. The first
+            <strong th:text="${disregardPercent} + '%'">25%</strong> of your weekly benefit in earnings is ignored.
+            After that, each dollar you earn lowers your payment by a dollar.</p>
+        <p><strong>Example:</strong> your weekly benefit is $400, so the first $100 you earn is ignored.
+            If you earn $160, your payment drops by $60, to $340. You keep your $160 too, so taking the work
+            always leaves you with more money.</p>
+    </details>
+
+    <details th:if="${waitingWeek}">
+        <summary>Why wasn't I paid for my first week?</summary>
+        <p>Your first week that qualifies is an unpaid "waiting week". Many states have this rule. You still need to
+            check in for it. Every week after that is paid if you qualify.</p>
+    </details>
+
+    <details>
+        <summary>How long can I get benefits?</summary>
+        <p>Up to <strong th:text="${maxWeeks} + ' weeks'">26 weeks</strong> of full payments per claim. Your claim page
+            shows how much is left.</p>
+    </details>
+
+    <div class="callout gold spaced">
+        <svg th:replace="~{icons :: alert}"></svg>
+        <p>This is a demo portfolio project, not a real government service. The rules here are simplified from real
+            state unemployment programs. If you need real benefits, contact your state's unemployment office.</p>
+    </div>
+
+    <div class="hero-actions">
+        <a th:href="@{/} + '#apply'" class="btn-primary">Start your claim</a>
+        <a th:href="@{/status}" class="btn-secondary">Check my claim</a>
+    </div>
+</main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
+</body>
+</html>

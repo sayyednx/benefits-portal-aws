@@ -1,26 +1,29 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Staff Login — Benefits Portal</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
+<head th:replace="~{fragments :: head('Staff login')}"></head>
 <body>
 <header th:replace="~{fragments :: publicHeader}"></header>
-<main class="wrap narrow">
-    <h1>Staff login</h1>
-    <form th:action="@{/admin/login}" method="post" class="form">
-        <div class="field">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" autocomplete="username">
-        </div>
-        <div class="field">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" autocomplete="current-password">
-        </div>
-        <button type="submit" class="btn-primary">Log in</button>
-    </form>
+
+<main id="main" class="wrap narrow">
+    <div class="card login-card">
+        <h1>Staff login</h1>
+        <p class="muted">For caseworkers and supervisors. Claimants, use <a th:href="@{/status}">Check my claim</a> instead.</p>
+        <p class="flash flash-error" th:if="${param.error}" role="alert">That username and password don't match. Try again.</p>
+        <p class="flash flash-ok" th:if="${param.logout}" role="status">You're logged out.</p>
+        <form th:action="@{/admin/login}" method="post" class="form">
+            <div class="field">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" autocomplete="username" required>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" autocomplete="current-password" required>
+            </div>
+            <div><button type="submit" class="btn-primary">Log in</button></div>
+        </form>
+    </div>
 </main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
 </body>
 </html>

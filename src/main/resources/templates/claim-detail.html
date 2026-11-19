@@ -1,35 +1,35 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="'Claim ' + ${claim.id} + ' — Benefits Portal'">Claim — Benefits Portal</title>
-    <link rel="stylesheet" th:href="@{/css/style.css}">
-</head>
-<body>
+<head th:replace="~{fragments :: head('Claim #' + ${claim.id})}"></head>
+<body class="staff">
 <header th:replace="~{fragments :: staffHeader}"></header>
 
-<main class="wrap">
+<main id="main" class="wrap">
     <p><a th:href="@{/admin/claims}">&larr; Back to the claims queue</a></p>
-    <h1>Claim #<span th:text="${claim.id}"></span>: <span th:text="${claim.claimantName}"></span></h1>
+    <div class="title-row">
+        <h1>Claim #<span th:text="${claim.id}"></span>: <span th:text="${claim.claimantName}"></span></h1>
+        <span class="status-pill" th:text="${claim.status.label}"
+              th:classappend="'status-' + ${#strings.toLowerCase(claim.status)}"></span>
+    </div>
+
+    <p class="flash flash-ok" th:if="${message}" th:text="${message}" role="status"></p>
+    <p class="flash flash-error" th:if="${error}" th:text="${error}" role="alert"></p>
 
     <section class="card">
         <h2>Details</h2>
         <dl class="summary">
-            <dt>Status</dt><dd th:text="${claim.status}"></dd>
+            <dt>Status</dt><dd th:text="${claim.status.label}"></dd>
+            <dt>Confirmation number</dt><dd th:text="${claim.confirmationNumber ?: '—'}"></dd>
             <dt>Email</dt><dd th:text="${claim.claimantEmail}"></dd>
             <dt>Employer</dt><dd th:text="${claim.employerName}"></dd>
             <dt>Last day worked</dt><dd th:text="${#temporals.format(claim.lastDayWorked, 'MMM d, yyyy')}"></dd>
-            <dt>Reason</dt><dd th:text="${claim.separationReason}"></dd>
-            <dt>Weekly wage</dt><dd th:text="'$' + ${claim.averageWeeklyWage}"></dd>
+            <dt>Reason</dt><dd th:text="${claim.separationReason.label}"></dd>
+            <dt>Weekly pay</dt><dd th:text="'$' + ${claim.averageWeeklyWage}"></dd>
             <dt>Weekly benefit</dt><dd th:text="'$' + ${claim.weeklyBenefitAmount}"></dd>
             <dt>Filed</dt><dd th:text="${#temporals.format(claim.filedAt, 'MMM d, yyyy h:mm a')}"></dd>
             <dt>Last decision by</dt><dd th:text="${claim.reviewedBy ?: '—'}"></dd>
         </dl>
     </section>
-
-    <p class="flash flash-ok" th:if="${message}" th:text="${message}" role="status"></p>
-    <p class="flash flash-error" th:if="${error}" th:text="${error}" role="alert"></p>
 
     <section class="card card-flag" th:unless="${flags.isEmpty()}">
         <h2>Fraud checks</h2>
@@ -80,7 +80,7 @@
         <form th:unless="${claim.status.finalForStaff}"
               th:action="@{/admin/claims/{id}/decision(id=${claim.id})}" method="post" class="decision-form">
             <select name="status" aria-label="New status">
-                <option th:each="s : ${claim.status.staffCanMoveTo()}" th:value="${s}" th:text="${s}"></option>
+                <option th:each="s : ${claim.status.staffCanMoveTo()}" th:value="${s}" th:text="${s.label}"></option>
             </select>
             <input type="text" name="reviewerNotes" placeholder="Notes (required to deny)" aria-label="Notes" class="wide">
             <button type="submit" class="btn-small">Save</button>
@@ -106,7 +106,7 @@
                 <td th:text="${c.refusedWork} ? 'Yes' : 'No'"></td>
                 <td th:text="${c.jobContacts}"></td>
                 <td th:text="'$' + ${c.grossEarnings}"></td>
-                <td><div th:text="${c.outcome}"></div><div class="muted" th:text="${c.outcomeReason}"></div></td>
+                <td><div><strong th:text="${c.outcome.label}"></strong></div><div class="muted" th:text="${c.outcomeReason}"></div></td>
                 <td th:text="'$' + ${c.amountPayable}"></td>
             </tr>
             </tbody>
@@ -120,9 +120,9 @@
         <ol class="timeline">
             <li th:each="e : ${history}">
                 <div>
-                    <strong th:text="${e.type}"></strong>
+                    <strong th:text="${e.type.label}"></strong>
                     <span th:if="${e.fromStatus != null}"
-                          th:text="${(e.fromStatus ?: '—') + ' → ' + (e.toStatus ?: '—')}"></span>
+                          th:text="${e.fromStatus.label + ' → ' + e.toStatus.label}"></span>
                 </div>
                 <div class="muted">
                     <span th:text="${#temporals.format(e.occurredAt, 'MMM d, yyyy h:mm a')}"></span>
@@ -133,5 +133,7 @@
         </ol>
     </section>
 </main>
+
+<footer th:replace="~{fragments :: footer}"></footer>
 </body>
 </html>

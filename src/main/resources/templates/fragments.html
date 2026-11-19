@@ -2,32 +2,81 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <body>
 
-<!-- Header for public (claimant) pages -->
-<header th:fragment="publicHeader" class="site-header">
+<!-- Shared <head>: fonts, styles, and icon. Use: <head th:replace="~{fragments :: head('Page title')}"></head> -->
+<head th:fragment="head(title)">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${title} + ' | Benefits Portal'">Benefits Portal</title>
+    <link rel="icon" type="image/svg+xml" th:href="@{/favicon.svg}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+
+<!-- A clear notice that this is a portfolio demo, so nobody mistakes it for a real agency site. -->
+<div th:fragment="demoBanner" class="demo-banner" role="note">
     <div class="wrap">
-        <a th:href="@{/}" class="brand">Benefits Portal</a>
-        <nav>
-            <a th:href="@{/}">File a claim</a>
-            <a th:href="@{/status}">Check my claim</a>
-            <a th:href="@{/admin/claims}">Staff login</a>
-        </nav>
+        <svg th:replace="~{icons :: info}"></svg>
+        <span>Demo project for a portfolio. This is not a real government website. Please don't enter real personal information.</span>
+    </div>
+</div>
+
+<!-- Header for public (claimant) pages -->
+<header th:fragment="publicHeader">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div th:replace="~{fragments :: demoBanner}"></div>
+    <div class="site-header">
+        <div class="wrap">
+            <a th:href="@{/}" class="brand">
+                <img th:src="@{/img/logo.svg}" alt="">
+                <span class="brand-name"><strong>Benefits Portal</strong><span>Unemployment Insurance</span></span>
+            </a>
+            <nav aria-label="Main">
+                <a th:href="@{/}">File a claim</a>
+                <a th:href="@{/status}">Check my claim</a>
+                <a th:href="@{/help}">Help</a>
+                <a th:href="@{/admin/claims}">Staff login</a>
+            </nav>
+        </div>
     </div>
 </header>
 
 <!-- Header for staff pages -->
-<header th:fragment="staffHeader" class="site-header">
-    <div class="wrap">
-        <a th:href="@{/admin/claims}" class="brand">Benefits Portal — Staff</a>
-        <nav>
-            <a th:href="@{/admin/claims}">Claims queue</a>
-            <a th:href="@{/admin/staff}" sec:authorize="hasRole('SUPERVISOR')">Staff</a>
-            <span class="muted" sec:authentication="name"></span>
-            <form th:action="@{/admin/logout}" method="post" class="logout-form">
-                <button type="submit" class="link-btn">Log out</button>
-            </form>
-        </nav>
+<header th:fragment="staffHeader">
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <div th:replace="~{fragments :: demoBanner}"></div>
+    <div class="site-header">
+        <div class="wrap">
+            <a th:href="@{/admin/claims}" class="brand">
+                <img th:src="@{/img/logo.svg}" alt="">
+                <span class="brand-name"><strong>Benefits Portal <span class="staff-tag">Staff</span></strong><span>Claims workspace</span></span>
+            </a>
+            <nav aria-label="Staff">
+                <a th:href="@{/admin/claims}">Claims queue</a>
+                <a th:href="@{/admin/staff}" sec:authorize="hasRole('SUPERVISOR')">Staff accounts</a>
+                <span class="who">Signed in as <strong sec:authentication="name"></strong></span>
+                <form th:action="@{/admin/logout}" method="post" class="logout-form">
+                    <button type="submit" class="link-btn">Log out</button>
+                </form>
+            </nav>
+        </div>
     </div>
 </header>
+
+<footer th:fragment="footer" class="site-footer">
+    <div class="wrap">
+        <div>
+            <strong>Benefits Portal</strong><br>
+            A portfolio project built with Java, Spring Boot, MySQL, Docker, and AWS.
+        </div>
+        <nav aria-label="Footer">
+            <a th:href="@{/help}">Help and common questions</a>
+            <a th:href="@{/status}">Check my claim</a>
+            <a href="https://github.com/sayyednx/benefits-portal-aws">Source code</a>
+        </nav>
+    </div>
+</footer>
 
 </body>
 </html>
