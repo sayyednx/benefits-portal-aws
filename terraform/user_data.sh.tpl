@@ -3,6 +3,16 @@
 # and starts the container pointed at the RDS instance Terraform just created.
 set -euxo pipefail
 
+# A t3.micro has only 1 GB of memory. Building the app with Maven can run out of it,
+# so add 2 GB of swap (disk space the server can use as extra, slower memory).
+if [ ! -f /swapfile ]; then
+  dd if=/dev/zero of=/swapfile bs=1M count=2048
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile swap swap defaults 0 0' >> /etc/fstab
+fi
+
 dnf update -y
 dnf install -y docker git
 systemctl enable --now docker
